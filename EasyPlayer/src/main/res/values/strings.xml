@@ -5,5 +5,5 @@
     <string name="title_activity_settings">Settings</string>
     <string name="title_activity_splash">Splash</string>
 
-    <string name="about_info">拉流IPC摄像机或者NVR硬盘录像机RTSP流转成RTMP推送到阿里云CDN/腾讯云CDN/RTMP流媒体服务器，支持多路RTSP流同时拉取并以RTMP协议推送发布。\n\n采用Config.ini配置文件，来配置每路输入的RTSP地址，以及目标RTMP地址。channel必须是channel0到channel1024之间，目标rtmp地址不能重复。</string>
+    <string name="about_info">EasyRTSPLive-Android是由TSINGSEE青犀开放平台开发和维护的一个完善的行业视频接入网关，拉流IPC摄像机或者NVR硬盘录像机RTSP流转成RTMP推送到阿里云CDN/腾讯云CDN/RTMP流媒体服务器，暂时支持拉取一路RTSP流并以RTMP协议推送发布。</string>
 </resources>

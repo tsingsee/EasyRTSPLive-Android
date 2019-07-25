@@ -17,7 +17,7 @@ import org.easydarwin.easyrtsplive.TheApp;
 import org.easydarwin.easyrtsplive.databinding.ActivityAboutBinding;
 
 public class AboutActivity extends AppCompatActivity implements View.OnClickListener {
-    private static final String EP_URL = "https://github.com/EasyDarwin/EasyRTSPLive";
+    private static final String EP_URL = "https://github.com/tsingsee/EasyRTSPLive-Android";
 
     private ActivityAboutBinding binding;
 

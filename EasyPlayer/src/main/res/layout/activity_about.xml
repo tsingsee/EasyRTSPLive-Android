@@ -83,7 +83,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="16dp"
                 android:layout_marginTop="16dp"
-                android:text="项目地址：https://github.com/EasyDSS/EasyPlayer"
+                android:text="项目地址：https://github.com/tsingsee/EasyRTSPLive-Android"
                 android:textSize="15sp"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
