@@ -32,8 +32,7 @@ public class EasyDBHelper extends SQLiteOpenHelper {
 
         for (cursor.moveToFirst();!cursor.isAfterLast();cursor.moveToNext()){
             ContentValues cv = new ContentValues();
-            cv.put(VideoSource.RTSP_URL, cursor.getString(cursor.getColumnIndex(VideoSource.RTSP_URL)));
-            cv.put(VideoSource.RTMP_URL, cursor.getString(cursor.getColumnIndex(VideoSource.RTMP_URL)));
+            cv.put(VideoSource.URL, cursor.getString(cursor.getColumnIndex(VideoSource.URL)));
             cv.put(VideoSource.SEND_OPTION, 0);
             cv.put(VideoSource.TRANSPORT_MODE, 0);
             cv.put(VideoSource.AUDIENCE_NUMBER, 0);

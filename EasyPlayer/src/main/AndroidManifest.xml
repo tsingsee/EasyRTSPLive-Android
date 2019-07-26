@@ -43,8 +43,16 @@
         </activity>
 
         <activity
-            android:name="org.easydarwin.easyrtsplive.activity.PushActivity"
+            android:name="org.easydarwin.easyrtsplive.activity.PlayActivity"
             android:configChanges="orientation|keyboardHidden|screenSize" />
+
+        <activity
+            android:name="org.easydarwin.easyrtsplive.activity.YUVExportActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize" />
+
+        <activity
+            android:name="org.easydarwin.easyrtsplive.activity.SettingsActivity"
+            android:label="@string/title_activity_settings" />
 
         <activity
             android:name="org.easydarwin.easyrtsplive.activity.SplashActivity"
@@ -53,6 +61,10 @@
             android:theme="@style/FullscreenTheme" />
 
         <activity android:name="org.easydarwin.easyrtsplive.activity.ScanQRActivity" />
+
+        <activity
+            android:name="org.easydarwin.easyrtsplive.activity.MediaFilesActivity"
+            android:label="文件夹" />
 
         <activity android:name="org.easydarwin.easyrtsplive.activity.AboutActivity"></activity>
 

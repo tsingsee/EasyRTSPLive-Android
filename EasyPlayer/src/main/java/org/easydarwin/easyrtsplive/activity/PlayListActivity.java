@@ -12,6 +12,7 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -21,11 +22,17 @@ import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.signature.StringSignature;
 
 import org.easydarwin.easyrtsplive.BuildConfig;
 import org.easydarwin.easyrtsplive.R;
@@ -33,26 +40,33 @@ import org.easydarwin.easyrtsplive.TheApp;
 import org.easydarwin.easyrtsplive.data.VideoSource;
 import org.easydarwin.easyrtsplive.databinding.ActivityPlayListBinding;
 import org.easydarwin.easyrtsplive.databinding.VideoSourceItemBinding;
+import org.easydarwin.easyrtsplive.util.FileUtil;
+import org.easydarwin.easyrtsplive.util.SPUtil;
+
+import java.io.File;
+import java.util.UUID;
+
+import static org.easydarwin.update.UpdateMgr.MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE;
 
 /**
  * 视频广场
  * */
 public class PlayListActivity extends AppCompatActivity implements View.OnClickListener, View.OnLongClickListener {
 
+    private static final int REQUEST_PLAY = 1000;
     public static final int REQUEST_CAMERA_PERMISSION = 1001;
-    private static final int REQUEST_RTSP_SCAN_TEXT_URL = 1002;
-    private static final int REQUEST_RTMP_SCAN_TEXT_URL = 1003;
-    private int requestScanTextTag;
+    private static final int REQUEST_SCAN_TEXT_URL = 1003;      // 扫描二维码
 
     public static final String EXTRA_BOOLEAN_SELECT_ITEM_TO_PLAY = "extra-boolean-select-item-to-play";
 
     private int mPos;
     private ActivityPlayListBinding mBinding;
     private RecyclerView mRecyclerView;
-    private EditText rtspEdit;
-    private EditText rtmpEdit;
+    private EditText edit;
 
     private Cursor mCursor;
+
+//    private UpdateMgr update;
 
     private long mExitTime;//声明一个long类型变量：用于存放上一点击“返回键”的时刻
 
@@ -75,8 +89,7 @@ public class PlayListActivity extends AppCompatActivity implements View.OnClickL
         mCursor = TheApp.sDB.query(VideoSource.TABLE_NAME, null, null, null, null, null, null);
         if (!mCursor.moveToFirst()) {
             ContentValues cv = new ContentValues();
-            cv.put(VideoSource.RTSP_URL, VideoSource.RTSP);
-            cv.put(VideoSource.RTMP_URL, VideoSource.RTMP);
+            cv.put(VideoSource.URL, "rtsp://184.72.239.149/vod/mp4://BigBuckBunny_175k.mov");
             cv.put(VideoSource.TRANSPORT_MODE, VideoSource.TRANSPORT_MODE_TCP);
             cv.put(VideoSource.SEND_OPTION, VideoSource.SEND_OPTION_TRUE);
 
@@ -84,6 +97,9 @@ public class PlayListActivity extends AppCompatActivity implements View.OnClickL
 
             mCursor.close();
             mCursor = TheApp.sDB.query(VideoSource.TABLE_NAME, null, null, null, null, null, null);
+
+            SPUtil.setAutoAudio(this, true);
+            SPUtil.setswCodec(this, true);
         }
 
         mRecyclerView = mBinding.recycler;
@@ -99,11 +115,26 @@ public class PlayListActivity extends AppCompatActivity implements View.OnClickL
             public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
                 PlayListViewHolder plvh = (PlayListViewHolder) holder;
                 mCursor.moveToPosition(position);
-                String rtsp_url = mCursor.getString(mCursor.getColumnIndex(VideoSource.RTSP_URL));
-                String rtmp_url = mCursor.getString(mCursor.getColumnIndex(VideoSource.RTMP_URL));
+                String name = mCursor.getString(mCursor.getColumnIndex(VideoSource.NAME));
+                String url = mCursor.getString(mCursor.getColumnIndex(VideoSource.URL));
 
-                plvh.tv_rtsp.setText(rtsp_url);
-                plvh.tv_rtmp.setText(rtmp_url);
+                if (!TextUtils.isEmpty(name)) {
+                    plvh.mTextView.setText(name);
+                } else {
+                    plvh.mTextView.setText(url);
+                }
+
+                File file = FileUtil.getSnapFile(url);
+                Glide.with(PlayListActivity.this).load(file).signature(new StringSignature(UUID.randomUUID().toString())).placeholder(R.drawable.placeholder).centerCrop().into(plvh.mImageView);
+
+                int audienceNumber = mCursor.getInt(mCursor.getColumnIndex(VideoSource.AUDIENCE_NUMBER));
+
+                if (audienceNumber > 0) {
+                    plvh.mAudienceNumber.setText(String.format("当前观看人数:%d", audienceNumber));
+                    plvh.mAudienceNumber.setVisibility(View.VISIBLE);
+                } else {
+                    plvh.mAudienceNumber.setVisibility(View.GONE);
+                }
             }
 
             @Override
@@ -126,7 +157,15 @@ public class PlayListActivity extends AppCompatActivity implements View.OnClickL
                     mBinding.pullToRefresh.setRefreshing(false);
                 }
             });
+
+            mBinding.toolbarSetting.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startActivity(new Intent(PlayListActivity.this, SettingsActivity.class));
+                }
+            });
         } else {
+            mBinding.toolbarSetting.setVisibility(View.GONE);
             mBinding.pullToRefresh.setEnabled(false);
         }
 
@@ -143,6 +182,17 @@ public class PlayListActivity extends AppCompatActivity implements View.OnClickL
                 startActivity(new Intent(PlayListActivity.this, AboutActivity.class));
             }
         });
+
+//        /* ==================== 版本更新 ==================== */
+//        String url;
+//        if (PlayListActivity.isPro()) {
+//            url = "http://www.easydarwin.org/versions/easyplayer_pro/version.txt";
+//        } else {
+//            url = "http://www.easydarwin.org/versions/easyplayer-rtmp/version.txt";
+//        }
+//
+//        update = new UpdateMgr(this);
+//        update.checkUpdate(url);
     }
 
     @Override
@@ -154,6 +204,12 @@ public class PlayListActivity extends AppCompatActivity implements View.OnClickL
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE:
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//                    update.doDownload();
+                }
             case REQUEST_CAMERA_PERMISSION: {
                 if (grantResults.length > 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                     toScanQRActivity();
@@ -171,19 +227,34 @@ public class PlayListActivity extends AppCompatActivity implements View.OnClickL
 
         if (pos != -1) {
             mCursor.moveToPosition(pos);
-            String rtsp = mCursor.getString(mCursor.getColumnIndex(VideoSource.RTSP_URL));
-            String rtmp = mCursor.getString(mCursor.getColumnIndex(VideoSource.RTMP_URL));
+            String playUrl = mCursor.getString(mCursor.getColumnIndex(VideoSource.URL));
             int sendOption = mCursor.getInt(mCursor.getColumnIndex(VideoSource.SEND_OPTION));
             int transportMode = mCursor.getInt(mCursor.getColumnIndex(VideoSource.TRANSPORT_MODE));
 
-            if (!TextUtils.isEmpty(rtsp)) {
-                Intent i = new Intent(PlayListActivity.this, PushActivity.class);
-                i.putExtra("rtsp_url", rtsp);
-                i.putExtra("rtmp_url", rtmp);
-                i.putExtra(VideoSource.SEND_OPTION, sendOption);
-                i.putExtra(VideoSource.TRANSPORT_MODE, transportMode);
-                mPos = pos;
-                startActivity(i);
+            if (!TextUtils.isEmpty(playUrl)) {
+                if (getIntent().getBooleanExtra(EXTRA_BOOLEAN_SELECT_ITEM_TO_PLAY, false)) {
+                    Intent data = new Intent();
+                    data.putExtra("url", playUrl);
+                    data.putExtra(VideoSource.SEND_OPTION, sendOption);
+                    data.putExtra(VideoSource.TRANSPORT_MODE, transportMode);
+                    setResult(RESULT_OK, data);
+                    finish();
+                } else {
+                    if (BuildConfig.YUV_EXPORT) {
+                        // YUV EXPORT DEMO..
+                        Intent i = new Intent(PlayListActivity.this, YUVExportActivity.class);
+                        i.putExtra("play_url", playUrl);
+                        mPos = pos;
+                        startActivity(i);
+                    } else {
+                        Intent i = new Intent(PlayListActivity.this, PlayActivity.class);
+                        i.putExtra("play_url", playUrl);
+                        i.putExtra(VideoSource.SEND_OPTION, sendOption);
+                        i.putExtra(VideoSource.TRANSPORT_MODE, transportMode);
+                        mPos = pos;
+                        ActivityCompat.startActivityForResult(this, i, REQUEST_PLAY, ActivityOptionsCompat.makeSceneTransitionAnimation(this, holder.mImageView, "video_animation").toBundle());
+                    }
+                }
             }
         }
     }
@@ -237,46 +308,42 @@ public class PlayListActivity extends AppCompatActivity implements View.OnClickL
     }
 
     private void displayDialog(final int pos) {
-        String rtsp_url = "rtsp://";
-        String rtmp_url = "rtmp://";
+        String url = "rtsp://";
 
         View view = getLayoutInflater().inflate(R.layout.new_media_source_dialog, null);
-        rtspEdit = view.findViewById(R.id.rtsp_et);
-        rtmpEdit = view.findViewById(R.id.rtmp_et);
+        final CheckBox sendOption = view.findViewById(R.id.send_option);
+        final RadioGroup transportMode = view.findViewById(R.id.transport_mode);
+        final RadioButton transportTcp = view.findViewById(R.id.transport_tcp);
+        edit = view.findViewById(R.id.new_media_source_url);
 
         if (pos > -1) {
             mCursor.moveToPosition(pos);
-            rtsp_url = mCursor.getString(mCursor.getColumnIndex(VideoSource.RTSP_URL));
-            rtmp_url = mCursor.getString(mCursor.getColumnIndex(VideoSource.RTMP_URL));
+            url = mCursor.getString(mCursor.getColumnIndex(VideoSource.URL));
+
+            final int sendOptionValue = mCursor.getInt(mCursor.getColumnIndex(VideoSource.SEND_OPTION));
+            if (sendOptionValue == VideoSource.SEND_OPTION_TRUE) {
+                sendOption.setChecked(true);
+            } else {
+                sendOption.setChecked(false);
+            }
+
+            final int transportModeValue = mCursor.getInt(mCursor.getColumnIndex(VideoSource.TRANSPORT_MODE));
+            if (transportModeValue == VideoSource.TRANSPORT_MODE_UDP) {
+                transportMode.check(R.id.transport_udp);
+            } else {
+                transportMode.check(R.id.transport_tcp);
+            }
         }
 
-        rtspEdit.setText(rtsp_url);
-        rtspEdit.setSelection(rtsp_url.length());
-        rtmpEdit.setText(rtmp_url);
-        rtmpEdit.setSelection(rtmp_url.length());
+        edit.setHint("RTSP://...");
+        edit.setText(url);
+        edit.setSelection(url.length());
 
         // 去扫描二维码
-        final ImageButton rtsp_scan_ib = view.findViewById(R.id.rtsp_scan_ib);
-        final ImageButton rtmp_scan_ib = view.findViewById(R.id.rtmp_scan_ib);
-
-        rtsp_scan_ib.setOnClickListener(new View.OnClickListener() {
+        final ImageButton btn = view.findViewById(R.id.new_media_scan);
+        btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                requestScanTextTag = REQUEST_RTSP_SCAN_TEXT_URL;
-                // 动态获取camera和audio权限
-                if (ActivityCompat.checkSelfPermission(PlayListActivity.this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
-                        || ActivityCompat.checkSelfPermission(PlayListActivity.this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(PlayListActivity.this, new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO}, REQUEST_CAMERA_PERMISSION);
-                } else {
-                    toScanQRActivity();
-                }
-            }
-        });
-
-        rtmp_scan_ib.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                requestScanTextTag = REQUEST_RTMP_SCAN_TEXT_URL;
                 // 动态获取camera和audio权限
                 if (ActivityCompat.checkSelfPermission(PlayListActivity.this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
                         || ActivityCompat.checkSelfPermission(PlayListActivity.this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
@@ -289,32 +356,31 @@ public class PlayListActivity extends AppCompatActivity implements View.OnClickL
 
         final AlertDialog dlg = new AlertDialog.Builder(PlayListActivity.this)
                 .setView(view)
-                .setTitle("请输入流地址")
+                .setTitle("请输入播放地址")
                 .setPositiveButton("确定", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        String rtsp_url = String.valueOf(rtspEdit.getText());
-                        String rtmp_url = String.valueOf(rtmpEdit.getText());
+                        String url = String.valueOf(edit.getText());
 
-                        if (TextUtils.isEmpty(rtsp_url) || TextUtils.isEmpty(rtmp_url)) {
+                        if (TextUtils.isEmpty(url)) {
                             return;
                         }
 
-                        if (rtsp_url.toLowerCase().indexOf("rtsp://") != 0) {
+                        if (url.toLowerCase().indexOf("rtsp://") != 0) {
                             Toast.makeText(PlayListActivity.this,"不是合法的RTSP地址，请重新添加.",Toast.LENGTH_SHORT).show();
                             return;
                         }
 
-                        if (rtmp_url.toLowerCase().indexOf("rtmp://") != 0) {
-                            Toast.makeText(PlayListActivity.this,"不是合法的RTMP地址，请重新添加.",Toast.LENGTH_SHORT).show();
-                            return;
+                        ContentValues cv = new ContentValues();
+                        cv.put(VideoSource.URL, url);
+
+                        if (transportTcp.isChecked()) {
+                            cv.put(VideoSource.TRANSPORT_MODE, VideoSource.TRANSPORT_MODE_TCP);
+                        } else {
+                            cv.put(VideoSource.TRANSPORT_MODE, VideoSource.TRANSPORT_MODE_UDP);
                         }
 
-                        ContentValues cv = new ContentValues();
-                        cv.put(VideoSource.RTSP_URL, rtsp_url);
-                        cv.put(VideoSource.RTMP_URL, rtmp_url);
-                        cv.put(VideoSource.TRANSPORT_MODE, VideoSource.TRANSPORT_MODE_TCP);
-                        cv.put(VideoSource.SEND_OPTION, VideoSource.SEND_OPTION_TRUE);
+                        cv.put(VideoSource.SEND_OPTION, sendOption.isChecked() ? VideoSource.SEND_OPTION_TRUE : VideoSource.SEND_OPTION_FALSE);
 
                         if (pos > -1) {
                             final int _id = mCursor.getInt(mCursor.getColumnIndex(VideoSource._ID));
@@ -340,7 +406,7 @@ public class PlayListActivity extends AppCompatActivity implements View.OnClickL
             @Override
             public void onShow(DialogInterface dialogInterface) {
                 InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.showSoftInput(rtspEdit, InputMethodManager.SHOW_IMPLICIT);
+                imm.showSoftInput(edit, InputMethodManager.SHOW_IMPLICIT);
             }
         });
 
@@ -349,7 +415,7 @@ public class PlayListActivity extends AppCompatActivity implements View.OnClickL
 
     private void toScanQRActivity() {
         Intent intent = new Intent(PlayListActivity.this, ScanQRActivity.class);
-        startActivityForResult(intent, requestScanTextTag);
+        startActivityForResult(intent, REQUEST_SCAN_TEXT_URL);
         overridePendingTransition(R.anim.slide_bottom_in, R.anim.slide_top_out);
     }
 
@@ -376,14 +442,16 @@ public class PlayListActivity extends AppCompatActivity implements View.OnClickL
      * 视频源的item
      * */
     class PlayListViewHolder extends RecyclerView.ViewHolder {
-        private final TextView tv_rtsp;
-        private final TextView tv_rtmp;
+        private final TextView mTextView;
+        private final TextView mAudienceNumber;
+        private final ImageView mImageView;
 
         public PlayListViewHolder(VideoSourceItemBinding binding) {
             super(binding.getRoot());
 
-            tv_rtsp = binding.rtspTv;
-            tv_rtmp = binding.rtmpTv;
+            mTextView = binding.videoSourceItemName;
+            mAudienceNumber = binding.videoSourceItemAudienceNumber;
+            mImageView = binding.videoSourceItemThumb;
 
             itemView.setOnClickListener(PlayListActivity.this);
             itemView.setOnLongClickListener(PlayListActivity.this);
@@ -395,15 +463,10 @@ public class PlayListActivity extends AppCompatActivity implements View.OnClickL
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == REQUEST_RTSP_SCAN_TEXT_URL) {
+        if (requestCode == REQUEST_SCAN_TEXT_URL) {
             if (resultCode == RESULT_OK) {
                 String url = data.getStringExtra("text");
-                rtspEdit.setText(url);
-            }
-        } else if (requestCode == REQUEST_RTMP_SCAN_TEXT_URL) {
-            if (resultCode == RESULT_OK) {
-                String url = data.getStringExtra("text");
-                rtmpEdit.setText(url);
+                edit.setText(url);
             }
         } else {
             mRecyclerView.getAdapter().notifyItemChanged(mPos);

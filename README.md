@@ -1,5 +1,25 @@
 ## EasyRTSPLive-Android介绍 ##
+
 EasyRTSPLive-Android是由[TSINGSEE青犀开放平台](http://open.tsingsee.com "TSINGSEE青犀开放平台")开发和维护的一个完善的行业视频接入网关，拉流IPC摄像机或者NVR硬盘录像机RTSP流转成RTMP推送到阿里云CDN/腾讯云CDN/RTMP流媒体服务器，暂时支持拉取一路RTSP流并以RTMP协议推送发布。
+
+## 工程结构 Project structure ##
+	EasyPlayer_Android
+	|-EasyPlayer            APP module
+	|-library               library module
+
+## 功能特点 ##
+
+- [x] 超低延迟的rtsp播放器；
+- [x] 完美支持多窗口多实例播放；
+- [x] 支持RTSP TCP/UDP模式切换；
+- [x] 支持播放端，buffer设置；
+- [x] 秒开播放；
+- [x] 支持自定义播放布局;
+- [x] 编解码、显示、播放源码全开放，更加灵活;
+- [x] 支持播放过程中，'实时静音/取消静音';
+- [x] 高效的延时追帧策略；
+- [x] [快照]支持播放过程中，**随时快照**；
+- [x] [录像]支持播放过程中，**随时录像**；
 
 ## 工程结构 Project structure ##
 	EasyRTSPLive-Android

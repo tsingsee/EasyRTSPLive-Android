@@ -438,8 +438,8 @@ public class EasyPlayerClient implements Client.SourceCallBack {
         mWaitingKeyFrame = PreferenceManager.getDefaultSharedPreferences(mContext).getBoolean("waiting_i_frame", true);
         mWidth = mHeight = 0;
         mQueue.clear();
-//        startCodec();
-//        startAudio();
+        startCodec();
+        startAudio();
         mTimeout = false;
         mNotSupportedVideoCB = mNotSupportedAudioCB = false;
         mReceivedDataLength = 0;
@@ -1491,13 +1491,12 @@ public class EasyPlayerClient implements Client.SourceCallBack {
                     if (rr != null) rr.send(RESULT_VIDEO_SIZE, bundle);
                 }
             }
-
 //            Log.d(TAG, String.format("queue size :%d", mQueue.size()));
-//            try {
-//                mQueue.put(frameInfo);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
+            try {
+                mQueue.put(frameInfo);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
             if (mPusher != null) {
 
@@ -1537,14 +1536,14 @@ public class EasyPlayerClient implements Client.SourceCallBack {
                     }
                     return;
                 }
-            }
 
+            }
 //            Log.d(TAG, String.format("queue size :%d", mQueue.size()));
-//            try {
-//                mQueue.put(frameInfo);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
+            try {
+                mQueue.put(frameInfo);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         } else if (_frameType == 0) {
             // time out...
             if (!mTimeout) {
@@ -1598,15 +1597,15 @@ public class EasyPlayerClient implements Client.SourceCallBack {
         * */
         switch (info) {
             case 1:
-                resultData.putString("event-msg", "EasyRTSP 连接中");
+                resultData.putString("event-msg", "连接中...");
                 break;
             case 2:
                 resultData.putInt("errorcode", err);
-                resultData.putString("event-msg", String.format("EasyRTSP 错误：%d", err));
+                resultData.putString("event-msg", String.format("错误：%d", err));
                 break;
             case 3:
                 resultData.putInt("errorcode", err);
-                resultData.putString("event-msg", String.format("EasyRTSP 线程退出。%d", err));
+                resultData.putString("event-msg", String.format("线程退出。%d", err));
                 break;
         }
         if (rr != null) rr.send(RESULT_EVENT, resultData);
