@@ -1,5 +1,5 @@
 ## EasyRTSPLive-Android介绍 ##
-EasyRTSPLive-Android是由[TSINGSEE青犀开放平台](http://open.tsingsee.com "TSINGSEE青犀开放平台")开发和维护的一个完善的行业视频接入网关，拉流IPC摄像机或者NVR硬盘录像机RTSP流转成RTMP推送到阿里云CDN/腾讯云CDN/RTMP流媒体服务器，暂时支持拉取一路RTSP流并以RTMP协议推送发布。
+EasyRTSPLive-Android是由[TSINGSEE青犀开放平台](http://open.tsingsee.com "TSINGSEE青犀开放平台")开发和维护的一个完善的行业视频接入网关，拉流IPC摄像机或者NVR硬盘录像机RTSP流转成RTMP推送到阿里云CDN/腾讯云CDN/RTMP流媒体服务器， EasyRTSPLive-Android是一款非常稳定的RTSP协议转RTMP协议的行业视频接入网关，全平台支持（包括Windows/Linux 32&64，ARM各种平台，Android，iOS），是技术研发快速迭代的工具，也是安防运维人员进行现场问题排查的得力帮手！
 
 ## 工程结构 Project structure ##
 	EasyRTSPLive-Android
@@ -13,13 +13,6 @@ EasyRTSPLive-Android是由[TSINGSEE青犀开放平台](http://open.tsingsee.com 
 - EasyPlayerClient设置流地址并启动
 
 **注意：本SDK是基于Android Studio3.4.1开发，请及时更新您的IDE**
-
-## 技术支持 ##
-- 邮件：[support@easydarwin.org](mailto:support@easydarwin.org) 
-
-- QQ交流群：<a href="http://jq.qq.com/?_wv=1027&k=2IDkJId" target="_blank" title="EasyPlayer">**544917793**</a>
-
-> EasyRTSPLive-Android是一款非常稳定的RTSP协议转RTMP协议的行业视频接入网关，全平台支持（包括Windows/Linux 32&64，ARM各种平台，Android，iOS），是技术研发快速迭代的工具，也是安防运维人员进行现场问题排查的得力帮手！各平台版本需要经过授权才能商业使用，商业授权方案可以通过以上渠道进行更深入的技术与合作咨询。
 
 ## 获取更多信息 ##
 TSINGSEE青犀开放平台：[http://open.tsingsee.com](http://open.tsingsee.com "TSINGSEE青犀开放平台")
