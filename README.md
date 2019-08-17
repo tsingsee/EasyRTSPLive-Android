@@ -14,6 +14,12 @@ EasyRTSPLive-Android是由[TSINGSEE青犀开放平台](http://open.tsingsee.com 
 
 **注意：本SDK是基于Android Studio3.4.1开发，请及时更新您的IDE**
 
+## 直接试用
+
+https://fir.im/EasyRTSPLive
+
+![EasyRTSPLive-Android](https://github.com/tsingsee/images/blob/master/EasyRTSPLive/fir.easyrtsplive.android.png?raw=true)
+
 ## 获取更多信息 ##
 TSINGSEE青犀开放平台：[http://open.tsingsee.com](http://open.tsingsee.com "TSINGSEE青犀开放平台")
 
