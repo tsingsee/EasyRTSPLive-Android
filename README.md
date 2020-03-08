@@ -16,11 +16,12 @@ EasyRTSPLive-Android是由[TSINGSEE青犀开放平台](http://open.tsingsee.com 
 
 ## 直接试用
 
-https://fir.im/EasyRTSPLive
+[http://d.alphaqr.com/EasyRTSPLive](http://d.alphaqr.com/EasyRTSPLive)
+
 
 ![EasyRTSPLive-Android](https://github.com/tsingsee/images/blob/master/EasyRTSPLive/fir.easyrtsplive.android.png?raw=true)
 
 ## 获取更多信息 ##
 TSINGSEE青犀开放平台：[http://open.tsingsee.com](http://open.tsingsee.com "TSINGSEE青犀开放平台")
 
-Copyright &copy; TSINGSEE.com 2012~2019
+Copyright &copy; TSINGSEE.com 2012~2021
