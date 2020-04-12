@@ -19,7 +19,7 @@ EasyRTSPLive-Android是由[TSINGSEE青犀开放平台](http://open.tsingsee.com 
 [http://d.alphaqr.com/EasyRTSPLive](http://d.alphaqr.com/EasyRTSPLive)
 
 
-![EasyRTSPLive-Android](https://github.com/tsingsee/images/blob/master/EasyRTSPLive/fir.easyrtsplive.android.png?raw=true)
+![EasyRTSPLive-Android](http://www.easydarwin.org/github/images/app/2020/easy_rtsplive_android.png)
 
 ## 获取更多信息 ##
 TSINGSEE青犀开放平台：[http://open.tsingsee.com](http://open.tsingsee.com "TSINGSEE青犀开放平台")
