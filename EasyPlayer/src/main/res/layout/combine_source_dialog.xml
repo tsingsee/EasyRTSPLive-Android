@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorWhite">
+
+    <EditText
+        android:id="@+id/combine_source_url1"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:hint="输入RTSP地址"
+        android:paddingRight="25dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/combine_source_url2"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:hint="输入RTSP地址"
+        android:paddingRight="25dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/combine_source_url1" />
+
+    <EditText
+        android:id="@+id/combine_source_url3"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:hint="输入RTMP地址"
+        android:paddingRight="25dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/combine_source_url2" />
+
+    <TextView
+        android:id="@+id/combine_transport_mode_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="15dp"
+        android:text="传输协议："
+        android:textColor="#4c4c4c"
+        android:textSize="14sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/combine_source_url3" />
+
+    <RadioGroup
+        android:id="@+id/combine_transport_mode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="@id/combine_transport_mode_name"
+        app:layout_constraintStart_toEndOf="@id/combine_transport_mode_name"
+        app:layout_constraintTop_toTopOf="@id/combine_transport_mode_name">
+
+        <RadioButton
+            android:id="@+id/combine_transport_tcp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:button="@null"
+            android:checked="true"
+            android:drawableLeft="@drawable/bottom_icon_image_selector"
+            android:text=" TCP"
+            android:textColor="@drawable/bottom_icon_text_selector"
+            android:textSize="13sp" />
+
+        <RadioButton
+            android:id="@+id/combine_transport_udp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="6dp"
+            android:button="@null"
+            android:drawableLeft="@drawable/bottom_icon_image_selector"
+            android:text=" UDP"
+            android:textColor="@drawable/bottom_icon_text_selector"
+            android:textSize="13sp" />
+
+    </RadioGroup>
+
+    <TextView
+        android:id="@+id/combine_send_option_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="15dp"
+        android:text="是否发送保活包："
+        android:textColor="#4c4c4c"
+        android:textSize="14sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/combine_transport_mode" />
+
+    <CheckBox
+        android:id="@+id/combine_send_option"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:button="@null"
+        android:checked="true"
+        android:drawableLeft="@drawable/bottom_icon_image_selector"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="@id/combine_send_option_name"
+        app:layout_constraintStart_toEndOf="@id/combine_send_option_name"
+        app:layout_constraintTop_toTopOf="@id/combine_send_option_name">
+
+    </CheckBox>
+
+    <TextView
+        android:id="@+id/combine_camera_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="15dp"
+        android:text="是否合流摄像头数据："
+        android:textColor="#4c4c4c"
+        android:textSize="14sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/combine_send_option" />
+
+    <CheckBox
+        android:id="@+id/combine_camera"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:button="@null"
+        android:checked="true"
+        android:drawableLeft="@drawable/bottom_icon_image_selector"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="@id/combine_camera_name"
+        app:layout_constraintStart_toEndOf="@id/combine_camera_name"
+        app:layout_constraintTop_toTopOf="@id/combine_camera_name">
+
+    </CheckBox>
+
+</android.support.constraint.ConstraintLayout>
