@@ -40,10 +40,10 @@ public class EasyMuxer {
     private long audio_stample = 0;
 
     public EasyMuxer(String path, boolean hasAudio, long durationMillis) {
-        if (TextUtils.isEmpty(path)){
+        if (TextUtils.isEmpty(path)) {
             throw new InvalidParameterException("path should not be empty!");
         }
-        if (path.toLowerCase().endsWith(".mp4")){
+        if (path.toLowerCase().endsWith(".mp4")) {
             path = path.substring(0, path.toLowerCase().lastIndexOf(".mp4"));
         }
         mFilePath = path;
@@ -60,6 +60,7 @@ public class EasyMuxer {
             mMuxer = (MediaMuxer) mux;
         }
     }
+
     public synchronized void addTrack(MediaFormat format, boolean isVideo) {
         // now that we have the Magic Goodies, start the muxer
         if (mAudioTrackIndex != -1 && mVideoTrackIndex != -1)
@@ -84,8 +85,8 @@ public class EasyMuxer {
         }
     }
 
-    public synchronized void pumpStream(ByteBuffer outputBuffer, MediaCodec.BufferInfo bufferInfo, boolean isVideo)  {
-        if (mMuxer == null) Log.w(TAG,"muxer is null!");
+    public synchronized void pumpStream(ByteBuffer outputBuffer, MediaCodec.BufferInfo bufferInfo, boolean isVideo) {
+        if (mMuxer == null) Log.w(TAG, "muxer is null!");
         if (mVideoTrackIndex == -1) {
             Log.i(TAG, String.format("pumpStream [%s] but muxer is not start.ignore..", isVideo ? "video" : "audio"));
             return;
@@ -94,17 +95,17 @@ public class EasyMuxer {
             Log.i(TAG, String.format("pumpStream [%s] but muxer is not start.ignore..", isVideo ? "video" : "audio"));
             return;
         }
-        if (isVideo && mBeginMillis == 0L){   // 首帧需要是关键帧
-            if ((bufferInfo.flags & BUFFER_FLAG_KEY_FRAME) == 0){
+        if (isVideo && mBeginMillis == 0L) {   // 首帧需要是关键帧
+            if ((bufferInfo.flags & BUFFER_FLAG_KEY_FRAME) == 0) {
                 Log.i(TAG, String.format("pumpStream [%s] but key frame not GOTTEN.ignore..", isVideo ? "video" : "audio"));
                 return;
             }
         }
-        if (!isVideo && mBeginMillis == 0L){
+        if (!isVideo && mBeginMillis == 0L) {
             Log.i(TAG, String.format("pumpStream [%s] but video frame not GOTTEN.ignore..", isVideo ? "video" : "audio"));
             return;
         }
-        if (isVideo && mBeginMillis == 0L){
+        if (isVideo && mBeginMillis == 0L) {
             mBeginMillis = SystemClock.elapsedRealtime();
         }
         if ((bufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
@@ -121,24 +122,24 @@ public class EasyMuxer {
             if (VERBOSE)
                 Log.d(TAG, String.format("sent %s [" + bufferInfo.size + "] with timestamp:[%d] to muxer", isVideo ? "video" : "audio", bufferInfo.presentationTimeUs / 1000));
 
-            if (isVideo){
-                if (video_stample != 0){
-                    if (bufferInfo.presentationTimeUs - video_stample <= 0){
-                        Log.w(TAG,"video timestample goback, ignore!");
+            if (isVideo) {
+                if (video_stample != 0) {
+                    if (bufferInfo.presentationTimeUs - video_stample <= 0) {
+                        Log.w(TAG, "video timestample goback, ignore!");
                         return;
                     }
                     video_stample = bufferInfo.presentationTimeUs;
-                }else{
+                } else {
                     video_stample = bufferInfo.presentationTimeUs;
                 }
-            }else {
-                if (audio_stample != 0){
-                    if (bufferInfo.presentationTimeUs - audio_stample <= 0){
-                        Log.w(TAG,"audio timestample goback, ignore!");
+            } else {
+                if (audio_stample != 0) {
+                    if (bufferInfo.presentationTimeUs - audio_stample <= 0) {
+                        Log.w(TAG, "audio timestample goback, ignore!");
                         return;
                     }
                     audio_stample = bufferInfo.presentationTimeUs;
-                }else{
+                } else {
                     audio_stample = bufferInfo.presentationTimeUs;
                 }
             }
@@ -157,7 +158,7 @@ public class EasyMuxer {
             try {
                 mMuxer.stop();
                 mMuxer.release();
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             mMuxer = null;

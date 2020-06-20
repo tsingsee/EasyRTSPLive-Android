@@ -10,10 +10,9 @@ package org.easydarwin.easyrtmp.push;
 import android.content.Context;
 import android.util.Log;
 
-import org.easydarwin.video.EasyPlayerClient;
-
 public class EasyRTMP implements Pusher {
     private static String TAG = "EasyRTMP";
+    private static String RTMP_KEY;
 
     static {
         System.loadLibrary("easyrtmp");
@@ -30,8 +29,9 @@ public class EasyRTMP implements Pusher {
 
     private long mPusherObj = 0;
 
-    public EasyRTMP(int videoCodec) {
+    public EasyRTMP(int videoCodec, String key) {
         this.videoCodec = videoCodec;
+        this.RTMP_KEY = key;
     }
 
     public native static int getActiveDays(Context context,String key);
@@ -81,7 +81,7 @@ public class EasyRTMP implements Pusher {
     public synchronized void initPush(final String url, final Context context, final InitCallback callback, int fps) throws IllegalStateException {
         Log.d(TAG, "startPush begin");
 
-        mPusherObj = init(url, EasyPlayerClient.EASYRTMP_KEY, context, new OnInitPusherCallback() {
+        mPusherObj = init(url, RTMP_KEY, context, new OnInitPusherCallback() {
             int code = Integer.MAX_VALUE;
 
             @Override
@@ -101,7 +101,7 @@ public class EasyRTMP implements Pusher {
     public  void initPush(final String url, final Context context, final InitCallback callback, int pts, int samplerate, int channelcount) {
         Log.d(TAG, "startPush begin：" + pts + " " + samplerate + " " + channelcount);
 
-        mPusherObj = init(url, EasyPlayerClient.EASYRTMP_KEY, context, new OnInitPusherCallback() {
+        mPusherObj = init(url, RTMP_KEY, context, new OnInitPusherCallback() {
             int code = Integer.MAX_VALUE;
 
             @Override

@@ -19,18 +19,13 @@ import android.os.Process;
 import android.os.ResultReceiver;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
-import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
-import android.util.Pair;
 import android.view.Surface;
 import android.view.TextureView;
 
 import org.easydarwin.audio.AudioCodec;
 import org.easydarwin.audio.EasyAACMuxer;
-import org.easydarwin.easyrtmp.push.EasyRTMP;
-import org.easydarwin.easyrtmp.push.InitCallback;
-import org.easydarwin.easyrtmp.push.Pusher;
 import org.easydarwin.sw.JNIUtil;
 import org.easydarwin.util.CodecSpecificDataUtil;
 import org.easydarwin.util.TextureLifecycler;
@@ -41,9 +36,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 import java.util.PriorityQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
@@ -51,9 +44,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static android.media.AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
 import static android.media.MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible;
-import static android.media.MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420PackedPlanar;
 import static android.media.MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420PackedSemiPlanar;
-import static android.media.MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar;
 import static android.media.MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar;
 import static android.media.MediaCodecInfo.CodecCapabilities.COLOR_TI_FormatYUV420PackedSemiPlanar;
 import static org.easydarwin.util.CodecSpecificDataUtil.AUDIO_SPECIFIC_CONFIG_SAMPLING_RATE_TABLE;
@@ -65,19 +56,18 @@ import static org.easydarwin.video.EasyMuxer2.VIDEO_TYPE_H265;
  * Created by John on 2016/3/17.
  */
 public class EasyPlayerClient implements Client.SourceCallBack {
-
     private static final long LEAST_FRAME_INTERVAL = 10000l;
 
     /* 视频编码 */
-    public static final int EASY_SDK_VIDEO_CODEC_H264 = 0x1C;        /* H264  */
-    public static final int EASY_SDK_VIDEO_CODEC_H265 = 0x48323635; /*H265*/
-    public static final int EASY_SDK_VIDEO_CODEC_MJPEG = 0x08;/* MJPEG */
-    public static final int EASY_SDK_VIDEO_CODEC_MPEG4 = 0x0D;/* MPEG4 */
+    public static final int EASY_SDK_VIDEO_CODEC_H264 = 0x1C;       /* H264 */
+    public static final int EASY_SDK_VIDEO_CODEC_H265 = 0x48323635; /* H265 */
+    public static final int EASY_SDK_VIDEO_CODEC_MJPEG = 0x08;      /* MJPEG */
+    public static final int EASY_SDK_VIDEO_CODEC_MPEG4 = 0x0D;      /* MPEG4 */
 
     /* 音频编码 */
-    public static final int EASY_SDK_AUDIO_CODEC_AAC = 0x15002;        /* AAC */
-    public static final int EASY_SDK_AUDIO_CODEC_G711U = 0x10006;        /* G711 ulaw*/
-    public static final int EASY_SDK_AUDIO_CODEC_G711A = 0x10007;    /* G711 alaw*/
+    public static final int EASY_SDK_AUDIO_CODEC_AAC = 0x15002;     /* AAC */
+    public static final int EASY_SDK_AUDIO_CODEC_G711U = 0x10006;   /* G711 ulaw */
+    public static final int EASY_SDK_AUDIO_CODEC_G711A = 0x10007;   /* G711 alaw */
     public static final int EASY_SDK_AUDIO_CODEC_G726 = 0x1100B;    /* G726 */
 
     /**
@@ -89,14 +79,17 @@ public class EasyPlayerClient implements Client.SourceCallBack {
      * 表示视频的解码方式
      */
     public static final String KEY_VIDEO_DECODE_TYPE = "video-decode-type";
+
     /**
      * 表示视频的尺寸获取到了。具体尺寸见 EXTRA_VIDEO_WIDTH、EXTRA_VIDEO_HEIGHT
      */
     public static final int RESULT_VIDEO_SIZE = 02;
+
     /**
      * 表示KEY的可用播放时间已用完
      */
     public static final int RESULT_TIMEOUT = 03;
+
     /**
      * 表示KEY的可用播放时间已用完
      */
@@ -121,7 +114,6 @@ public class EasyPlayerClient implements Client.SourceCallBack {
      */
     public static final String EXTRA_VIDEO_HEIGHT = "extra-video-height";
 
-
     private static final int NAL_VPS = 32;
     private static final int NAL_SPS = 33;
     private static final int NAL_PPS = 34;
@@ -145,17 +137,13 @@ public class EasyPlayerClient implements Client.SourceCallBack {
     private ByteBuffer mCSD1;
     private final I420DataCallback i420callback;
     private boolean mMuxerWaitingKeyVideo;
+
     /**
      * -1 表示暂停中，0表示正常录像中，1表示恢复中。
      */
     private int mRecordingStatus;
     private long muxerPausedMillis = 0L;
     private long mMuxerCuttingMillis = 0L;
-
-    private Pusher mPusher;
-    private String mRtmpUrl;
-    private InitCallback mRtmpCallBack;
-    public static String EASYRTMP_KEY;
 
 //    private RtmpClient mRTMPClient = new RtmpClient();
 
@@ -169,7 +157,6 @@ public class EasyPlayerClient implements Client.SourceCallBack {
 
         public FrameInfoQueue() {
             super(INITIAL_CAPACITY, new Comparator<Client.FrameInfo>() {
-
                 @Override
                 public int compare(Client.FrameInfo frameInfo, Client.FrameInfo t1) {
                     return (int) (frameInfo.stamp - t1.stamp);
@@ -199,8 +186,10 @@ public class EasyPlayerClient implements Client.SourceCallBack {
                 int size = super.size();
                 super.clear();
                 int k = size;
-                for (; k > 0 && lock.hasWaiters(notFull); k--)
+
+                for (; k > 0 && lock.hasWaiters(notFull); k--) {
                     notFull.signal();
+                }
             } finally {
                 lock.unlock();
             }
@@ -208,12 +197,14 @@ public class EasyPlayerClient implements Client.SourceCallBack {
 
         public void put(Client.FrameInfo x) throws InterruptedException {
             lock.lockInterruptibly();
+
             try {
                 int size;
                 while ((size = super.size()) == CAPACITY) {
                     Log.v(TAG, "queue full:" + CAPACITY);
                     notFull.await();
                 }
+
                 offer(x);
 //                Log.d(TAG, String.format("queue size : " + size));
                 // 这里是乱序的。并非只有空的queue才丢到首位。因此不能做限制 if (size == 0)
@@ -225,7 +216,6 @@ public class EasyPlayerClient implements Client.SourceCallBack {
                         notVideo.signal();
                     }
                 }
-
             } finally {
                 lock.unlock();
             }
@@ -233,9 +223,11 @@ public class EasyPlayerClient implements Client.SourceCallBack {
 
         public Client.FrameInfo takeVideoFrame() throws InterruptedException {
             lock.lockInterruptibly();
+
             try {
                 while (true) {
                     Client.FrameInfo x = peek();
+
                     if (x == null) {
                         notVideo.await();
                     } else {
@@ -256,6 +248,7 @@ public class EasyPlayerClient implements Client.SourceCallBack {
 
         public Client.FrameInfo takeVideoFrame(long ms) throws InterruptedException {
             lock.lockInterruptibly();
+
             try {
                 while (true) {
                     Client.FrameInfo x = peek();
@@ -279,6 +272,7 @@ public class EasyPlayerClient implements Client.SourceCallBack {
 
         public Client.FrameInfo takeAudioFrame() throws InterruptedException {
             lock.lockInterruptibly();
+
             try {
                 while (true) {
                     Client.FrameInfo x = peek();
@@ -303,8 +297,8 @@ public class EasyPlayerClient implements Client.SourceCallBack {
 
     private FrameInfoQueue mQueue = new FrameInfoQueue();
 
-
     private final Context mContext;
+
     /**
      * 最新的视频时间戳
      */
@@ -360,7 +354,9 @@ public class EasyPlayerClient implements Client.SourceCallBack {
                 mSurface = new Surface(view.getSurfaceTexture());
             }
         };
+
         lifecycler.getLifecycle().addObserver(observer1);
+
         if (context instanceof LifecycleOwner) {
             LifecycleObserver observer = new LifecycleObserver() {
                 @OnLifecycleEvent(value = Lifecycle.Event.ON_DESTROY)
@@ -373,12 +369,12 @@ public class EasyPlayerClient implements Client.SourceCallBack {
                     EasyPlayerClient.this.pause();
                 }
 
-
                 @OnLifecycleEvent(value = Lifecycle.Event.ON_RESUME)
                 private void resume() {
                     EasyPlayerClient.this.resume();
                 }
             };
+
             ((LifecycleOwner) context).getLifecycle().addObserver(observer);
         }
     }
@@ -391,12 +387,12 @@ public class EasyPlayerClient implements Client.SourceCallBack {
      */
     public void play(final String url) {
         if (lifecycler.getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.CREATED)) {
-            start(url, TRANSTYPE_TCP, 0,Client.EASY_SDK_VIDEO_FRAME_FLAG | Client.EASY_SDK_AUDIO_FRAME_FLAG, "", "", null);
+            start(url, TRANSTYPE_TCP, 0, Client.EASY_SDK_VIDEO_FRAME_FLAG | Client.EASY_SDK_AUDIO_FRAME_FLAG, "", "", null);
         } else {
             lifecycler.getLifecycle().addObserver(new LifecycleObserver() {
                 @OnLifecycleEvent(value = Lifecycle.Event.ON_CREATE)
                 void create() {
-                    start(url, TRANSTYPE_TCP, 0,Client.EASY_SDK_VIDEO_FRAME_FLAG | Client.EASY_SDK_AUDIO_FRAME_FLAG,  "", "", null);
+                    start(url, TRANSTYPE_TCP, 0, Client.EASY_SDK_VIDEO_FRAME_FLAG | Client.EASY_SDK_AUDIO_FRAME_FLAG, "", "", null);
                 }
             });
         }
@@ -413,7 +409,7 @@ public class EasyPlayerClient implements Client.SourceCallBack {
      * @param pwd
      * @return
      */
-    public int start(final String url, int type, int sendOption,int mediaType, String user, String pwd) {
+    public int start(final String url, int type, int sendOption, int mediaType, String user, String pwd) {
         return start(url, type, sendOption, mediaType, user, pwd, null);
     }
 
@@ -438,8 +434,8 @@ public class EasyPlayerClient implements Client.SourceCallBack {
         mWaitingKeyFrame = PreferenceManager.getDefaultSharedPreferences(mContext).getBoolean("waiting_i_frame", true);
         mWidth = mHeight = 0;
         mQueue.clear();
-//        startCodec();
-//        startAudio();
+        startCodec();
+        startAudio();
         mTimeout = false;
         mNotSupportedVideoCB = mNotSupportedAudioCB = false;
         mReceivedDataLength = 0;
@@ -529,11 +525,6 @@ public class EasyPlayerClient implements Client.SourceCallBack {
         mQueue.clear();
         mClient = null;
         mNewestStample = 0;
-
-        if (mPusher != null) {
-            mPusher.stop();
-            mPusher = null;
-        }
     }
 
     public long receivedDataLength() {
@@ -546,105 +537,112 @@ public class EasyPlayerClient implements Client.SourceCallBack {
             @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
             @Override
             public void run() {
-                {
-                    Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO);
-                    Client.FrameInfo frameInfo;
-                    long handle = 0;
-                    final AudioManager am = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
-                    AudioManager.OnAudioFocusChangeListener l = new AudioManager.OnAudioFocusChangeListener() {
-                        @Override
-                        public void onAudioFocusChange(int focusChange) {
-                            if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
-                                AudioTrack audioTrack = mAudioTrack;
-                                if (audioTrack != null) {
-                                    audioTrack.setStereoVolume(1.0f, 1.0f);
-                                    if (audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PAUSED) {
-                                        audioTrack.flush();
-                                        audioTrack.play();
-                                    }
-                                }
-                            } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
-                                AudioTrack audioTrack = mAudioTrack;
-                                if (audioTrack != null) {
-                                    if (audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING) {
-                                        audioTrack.pause();
-                                    }
-                                }
-                            } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
-                                AudioTrack audioTrack = mAudioTrack;
-                                if (audioTrack != null) {
-                                    audioTrack.setStereoVolume(0.5f, 0.5f);
+                Process.setThreadPriority(Process.THREAD_PRIORITY_AUDIO);
+                Client.FrameInfo frameInfo;
+                long handle = 0;
+                final AudioManager am = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+                AudioManager.OnAudioFocusChangeListener l = new AudioManager.OnAudioFocusChangeListener() {
+                    @Override
+                    public void onAudioFocusChange(int focusChange) {
+                        if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
+                            AudioTrack audioTrack = mAudioTrack;
+                            if (audioTrack != null) {
+                                audioTrack.setStereoVolume(1.0f, 1.0f);
+                                if (audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PAUSED) {
+                                    audioTrack.flush();
+                                    audioTrack.play();
                                 }
                             }
+                        } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
+                            AudioTrack audioTrack = mAudioTrack;
+                            if (audioTrack != null) {
+                                if (audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING) {
+                                    audioTrack.pause();
+                                }
+                            }
+                        } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
+                            AudioTrack audioTrack = mAudioTrack;
+                            if (audioTrack != null) {
+                                audioTrack.setStereoVolume(0.5f, 0.5f);
+                            }
                         }
-                    };
-                    try {
-                        int requestCode = am.requestAudioFocus(l, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
-                        if (requestCode != AUDIOFOCUS_REQUEST_GRANTED) {
-                            return;
-                        }
-                        do {
+                    }
+                };
+
+                try {
+                    int requestCode = am.requestAudioFocus(l, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+                    if (requestCode != AUDIOFOCUS_REQUEST_GRANTED) {
+                        return;
+                    }
+
+                    do {
+                        frameInfo = mQueue.takeAudioFrame();
+                        if (mMediaInfo != null)
+                            break;
+                    } while (true);
+
+                    final Thread t = Thread.currentThread();
+
+                    if (mAudioTrack == null) {
+                        int sampleRateInHz = (int) (mMediaInfo.sample * 1.001);
+                        int channelConfig = mMediaInfo.channel == 1 ? AudioFormat.CHANNEL_OUT_MONO : AudioFormat.CHANNEL_OUT_STEREO;
+                        int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
+                        int bfSize = AudioTrack.getMinBufferSize(mMediaInfo.sample, channelConfig, audioFormat) * 8;
+                        mAudioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRateInHz, channelConfig, audioFormat, bfSize, AudioTrack.MODE_STREAM);
+                    }
+
+                    mAudioTrack.play();
+                    handle = AudioCodec.create(frameInfo.codec, frameInfo.sample_rate, frameInfo.channels, frameInfo.bits_per_sample);
+
+                    Log.w(TAG, String.format("POST VIDEO_DISPLAYED IN AUDIO THREAD!!!"));
+                    ResultReceiver rr = mRR;
+                    if (rr != null) rr.send(RESULT_VIDEO_DISPLAYED, null);
+
+                    // 半秒钟的数据缓存
+                    byte[] mBufferReuse = new byte[16000];
+                    int[] outLen = new int[1];
+                    while (mAudioThread != null) {
+                        if (frameInfo == null) {
                             frameInfo = mQueue.takeAudioFrame();
-                            if (mMediaInfo != null) break;
-                        } while (true);
-                        final Thread t = Thread.currentThread();
-
-                        if (mAudioTrack == null) {
-                            int sampleRateInHz = (int) (mMediaInfo.sample * 1.001);
-                            int channelConfig = mMediaInfo.channel == 1 ? AudioFormat.CHANNEL_OUT_MONO : AudioFormat.CHANNEL_OUT_STEREO;
-                            int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
-                            int bfSize = AudioTrack.getMinBufferSize(mMediaInfo.sample, channelConfig, audioFormat) * 8;
-                            mAudioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRateInHz, channelConfig, audioFormat, bfSize, AudioTrack.MODE_STREAM);
                         }
-                        mAudioTrack.play();
-                        handle = AudioCodec.create(frameInfo.codec, frameInfo.sample_rate, frameInfo.channels, frameInfo.bits_per_sample);
 
-                        Log.w(TAG, String.format("POST VIDEO_DISPLAYED IN AUDIO THREAD!!!"));
-                        ResultReceiver rr = mRR;
-                        if (rr != null) rr.send(RESULT_VIDEO_DISPLAYED, null);
+                        if (frameInfo.codec == EASY_SDK_AUDIO_CODEC_AAC && false) {
+                            pumpAACSample(frameInfo);
+                        }
 
-                        // 半秒钟的数据缓存
-                        byte[] mBufferReuse = new byte[16000];
-                        int[] outLen = new int[1];
-                        while (mAudioThread != null) {
-                            if (frameInfo == null) {
-                                frameInfo = mQueue.takeAudioFrame();
-                            }
-                            if (frameInfo.codec == EASY_SDK_AUDIO_CODEC_AAC && false) {
-                                pumpAACSample(frameInfo);
-                            }
-                            outLen[0] = mBufferReuse.length;
-                            long ms = SystemClock.currentThreadTimeMillis();
-                            int nRet = AudioCodec.decode(handle, frameInfo.buffer, 0, frameInfo.length, mBufferReuse, outLen);
-                            if (nRet == 0) {
+                        outLen[0] = mBufferReuse.length;
+                        long ms = SystemClock.currentThreadTimeMillis();
+                        int nRet = AudioCodec.decode(handle, frameInfo.buffer, 0, frameInfo.length, mBufferReuse, outLen);
+                        if (nRet == 0) {
 //                                if (frameInfo.codec != EASY_SDK_AUDIO_CODEC_AAC )
-                                {
+                            {
 //                                    save2path(mBufferReuse, 0, outLen[0],"/sdcard/111.pcm", true);
-                                    pumpPCMSample(mBufferReuse, outLen[0], frameInfo.stamp);
-                                }
-                                if (mAudioEnable)
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                        mAudioTrack.write(mBufferReuse, 0, outLen[0], AudioTrack.WRITE_NON_BLOCKING);
-                                    } else {
-                                        mAudioTrack.write(mBufferReuse, 0, outLen[0]);
-                                    }
+                                pumpPCMSample(mBufferReuse, outLen[0], frameInfo.stamp);
+                            }
 
-                            }
-                            frameInfo = null;
+                            if (mAudioEnable)
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                    mAudioTrack.write(mBufferReuse, 0, outLen[0], AudioTrack.WRITE_NON_BLOCKING);
+                                } else {
+                                    mAudioTrack.write(mBufferReuse, 0, outLen[0]);
+                                }
                         }
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    } finally {
-                        am.abandonAudioFocus(l);
-                        if (handle != 0) {
-                            AudioCodec.close(handle);
-                        }
-                        AudioTrack track = mAudioTrack;
-                        if (track != null) {
-                            synchronized (track) {
-                                mAudioTrack = null;
-                                track.release();
-                            }
+
+                        frameInfo = null;
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                } finally {
+                    am.abandonAudioFocus(l);
+                    if (handle != 0) {
+                        AudioCodec.close(handle);
+                    }
+
+                    AudioTrack track = mAudioTrack;
+                    if (track != null) {
+                        synchronized (track) {
+                            mAudioTrack = null;
+                            track.release();
                         }
                     }
                 }
@@ -864,6 +862,7 @@ public class EasyPlayerClient implements Client.SourceCallBack {
                 MediaCodec mCodec = null;
                 int mColorFormat = 0;
                 VideoCodec.VideoDecoderLite mDecoder = null, displayer = null;
+
                 try {
                     boolean pushBlankBuffersOnStop = true;
 
@@ -876,7 +875,8 @@ public class EasyPlayerClient implements Client.SourceCallBack {
                     int realHeight = mHeight;
                     int sliceHeight = realHeight;
 
-                    int frameWidth = 0;int frameHeight = 0;
+                    int frameWidth = 0;
+                    int frameHeight = 0;
 //
 //                    long decodeBegin = 0;
 //                    long current = 0;
@@ -885,31 +885,40 @@ public class EasyPlayerClient implements Client.SourceCallBack {
 
                     Client.FrameInfo initFrameInfo = null;
                     Client.FrameInfo frameInfo = null;
+
                     while (mThread != null) {
                         if (mCodec == null && mDecoder == null) {
                             if (frameInfo == null) {
                                 frameInfo = mQueue.takeVideoFrame();
                             }
+
                             initFrameInfo = frameInfo;
+
                             try {
                                 if (PreferenceManager.getDefaultSharedPreferences(mContext).getBoolean("use-sw-codec", false)) {
                                     throw new IllegalStateException("user set sw codec");
                                 }
+
                                 final String mime = frameInfo.codec == EASY_SDK_VIDEO_CODEC_H264 ? "video/avc" : "video/hevc";
                                 MediaFormat format = MediaFormat.createVideoFormat(mime, mWidth, mHeight);
                                 format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 0);
                                 format.setInteger(MediaFormat.KEY_PUSH_BLANK_BUFFERS_ON_STOP, pushBlankBuffersOnStop ? 1 : 0);
+                                // 指定解码后的帧格式
+                                format.setInteger(MediaFormat.KEY_COLOR_FORMAT, COLOR_FormatYUV420Flexible);
+
                                 if (mCSD0 != null) {
                                     format.setByteBuffer("csd-0", mCSD0);
                                 } else {
                                     throw new InvalidParameterException("csd-0 is invalid.");
                                 }
+
                                 if (mCSD1 != null) {
                                     format.setByteBuffer("csd-1", mCSD1);
                                 } else {
                                     if (frameInfo.codec == EASY_SDK_VIDEO_CODEC_H264)
                                         throw new InvalidParameterException("csd-1 is invalid.");
                                 }
+
                                 MediaCodecInfo ci = selectCodec(mime);
                                 mColorFormat = CodecSpecificDataUtil.selectColorFormat(ci, mime);
 
@@ -918,13 +927,13 @@ public class EasyPlayerClient implements Client.SourceCallBack {
                                     MediaCodecInfo.VideoCapabilities videoCapabilities = capabilities.getVideoCapabilities();
                                     boolean supported = videoCapabilities.isSizeSupported(mWidth, mHeight);
                                     Log.i(TAG, "media codec " + ci.getName() + (supported ? "support" : "not support") + mWidth + "*" + mHeight);
-                                    if (!supported){
+                                    if (!supported) {
                                         boolean b1 = videoCapabilities.getSupportedWidths().contains(mWidth + 0);
                                         boolean b2 = videoCapabilities.getSupportedHeights().contains(mHeight + 0);
-                                        supported |= b1&&b2;
-                                        if (supported){
+                                        supported |= b1 && b2;
+                                        if (supported) {
                                             Log.w(TAG, ".......................................................................");
-                                        }else {
+                                        } else {
                                             throw new IllegalStateException("media codec " + ci.getName() + (supported ? "support" : "not support") + mWidth + "*" + mHeight);
                                         }
                                     }
@@ -935,6 +944,7 @@ public class EasyPlayerClient implements Client.SourceCallBack {
                                 codec.configure(format, i420callback != null ? null : mSurface, null, 0);
                                 codec.setVideoScalingMode(MediaCodec.VIDEO_SCALING_MODE_SCALE_TO_FIT);
                                 codec.start();
+
                                 mCodec = codec;
                                 if (i420callback != null) {
                                     final VideoCodec.VideoDecoderLite decoder = new VideoCodec.VideoDecoderLite();
@@ -942,16 +952,26 @@ public class EasyPlayerClient implements Client.SourceCallBack {
                                     displayer = decoder;
                                 }
                             } catch (Throwable e) {
-                                if (mCodec != null) mCodec.release();
+                                if (mCodec != null) {
+                                    mCodec.release();
+                                }
                                 mCodec = null;
-                                if (displayer != null) displayer.close();
+
+                                if (displayer != null) {
+                                    displayer.close();
+                                    Log.i(TAG, "AAAA 958 displayer.close()");
+                                }
+
                                 displayer = null;
+
                                 Log.e(TAG, String.format("init codec error due to %s", e.getMessage()));
                                 e.printStackTrace();
+
                                 final VideoCodec.VideoDecoderLite decoder = new VideoCodec.VideoDecoderLite();
                                 decoder.create(mSurface, frameInfo.codec == EASY_SDK_VIDEO_CODEC_H264);
                                 mDecoder = decoder;
                             }
+
 //                            previewTickUs = mTexture.getTimestamp();
 //                            differ = previewTickUs - frameInfo.stamp;
 //                            index = mCodec.dequeueInputBuffer(0);
@@ -967,15 +987,16 @@ public class EasyPlayerClient implements Client.SourceCallBack {
                         } else {
                             frameInfo = mQueue.takeVideoFrame(5);
                         }
+
                         if (frameInfo != null) {
                             Log.d(TAG, "video " + frameInfo.stamp + " take[" + (frameInfo.stamp - lastFrameStampUs) + "]");
-                            if (frameHeight != 0 && frameWidth != 0){
-                                if (frameInfo.width != 0 && frameInfo.height != 0){
-                                    if (frameInfo.width != frameWidth || frameInfo.height != frameHeight){
+                            if (frameHeight != 0 && frameWidth != 0) {
+                                if (frameInfo.width != 0 && frameInfo.height != 0) {
+                                    if (frameInfo.width != frameWidth || frameInfo.height != frameHeight) {
                                         frameHeight = frameInfo.height;
                                         frameWidth = frameInfo.width;
                                         stopRecord();
-                                        if (mCodec != null){
+                                        if (mCodec != null) {
                                             mCodec.release();
                                             mCodec = null;
                                             continue;
@@ -988,16 +1009,25 @@ public class EasyPlayerClient implements Client.SourceCallBack {
                             pumpVideoSample(frameInfo);
                             lastFrameStampUs = frameInfo.stamp;
                         }
+
                         do {
                             if (mDecoder != null) {
                                 if (frameInfo != null) {
                                     long decodeBegin = SystemClock.elapsedRealtime();
                                     int[] size = new int[2];
-//                                mDecoder.decodeFrame(frameInfo, size);
+
+//                                    mDecoder.decodeFrame(frameInfo, size);
                                     ByteBuffer buf = mDecoder.decodeFrameYUV(frameInfo, size);
-                                    if (i420callback != null && buf != null)
+
+                                    if (i420callback != null && buf != null) {
                                         i420callback.onI420Data(buf);
-                                    if (buf != null) mDecoder.releaseBuffer(buf);
+                                    }
+
+                                    if (buf != null) {
+                                        mDecoder.releaseBuffer(buf);
+                                        Log.i(TAG, "AAAA 1022 releaseBuffer ");
+                                    }
+
                                     long decodeSpend = SystemClock.elapsedRealtime() - decodeBegin;
 
                                     boolean firstFrame = previousStampUs == 0l;
@@ -1059,21 +1089,23 @@ public class EasyPlayerClient implements Client.SourceCallBack {
                                             case MediaCodec.INFO_OUTPUT_FORMAT_CHANGED:
                                                 MediaFormat mf = mCodec.getOutputFormat();
                                                 Log.i(TAG, "INFO_OUTPUT_FORMAT_CHANGED ：" + mf);
+
                                                 int width = mf.getInteger(MediaFormat.KEY_WIDTH);
                                                 if (mf.containsKey("crop-left") && mf.containsKey("crop-right")) {
                                                     width = mf.getInteger("crop-right") + 1 - mf.getInteger("crop-left");
                                                 }
+
                                                 int height = mf.getInteger(MediaFormat.KEY_HEIGHT);
                                                 if (mf.containsKey("crop-top") && mf.containsKey("crop-bottom")) {
                                                     height = mf.getInteger("crop-bottom") + 1 - mf.getInteger("crop-top");
                                                 }
+
                                                 realWidth = width;
                                                 realHeight = height;
 
-                                                if (mf.containsKey(MediaFormat.KEY_SLICE_HEIGHT) ) {
+                                                if (mf.containsKey(MediaFormat.KEY_SLICE_HEIGHT)) {
                                                     sliceHeight = mf.getInteger(MediaFormat.KEY_SLICE_HEIGHT);
-                                                }
-                                                else{
+                                                } else {
                                                     sliceHeight = realHeight;
                                                 }
                                                 break;
@@ -1110,37 +1142,52 @@ public class EasyPlayerClient implements Client.SourceCallBack {
                                                 } else {
                                                     outputBuffer = mCodec.getOutputBuffers()[index];
                                                 }
+
                                                 if (i420callback != null && outputBuffer != null) {
-                                                    if (sliceHeight != realHeight){
-                                                        ByteBuffer tmp = ByteBuffer.allocateDirect(realWidth*realHeight*3/2);
+                                                    if (sliceHeight != realHeight) {
+                                                        ByteBuffer tmp = ByteBuffer.allocateDirect(realWidth * realHeight * 3 / 2);
                                                         outputBuffer.clear();
-                                                        outputBuffer.limit(realWidth*realHeight);
+                                                        outputBuffer.limit(realWidth * realHeight);
                                                         tmp.put(outputBuffer);
 
                                                         outputBuffer.clear();
                                                         outputBuffer.position(realWidth * sliceHeight);
-                                                        outputBuffer.limit((realWidth * sliceHeight + realWidth*realHeight /4));
+                                                        outputBuffer.limit((realWidth * sliceHeight + realWidth * realHeight / 4));
                                                         tmp.put(outputBuffer);
 
                                                         outputBuffer.clear();
-                                                        outputBuffer.position(realWidth * sliceHeight + realWidth*realHeight/4);
-                                                        outputBuffer.limit((realWidth * sliceHeight + realWidth*realHeight/4 + realWidth*realHeight /4));
+                                                        outputBuffer.position(realWidth * sliceHeight + realWidth * realHeight / 4);
+                                                        outputBuffer.limit((realWidth * sliceHeight + realWidth * realHeight / 4 + realWidth * realHeight / 4));
                                                         tmp.put(outputBuffer);
 
                                                         tmp.clear();
                                                         outputBuffer = tmp;
                                                     }
 
-                                                    if (mColorFormat == COLOR_FormatYUV420SemiPlanar || mColorFormat == COLOR_FormatYUV420PackedSemiPlanar
+                                                    if (mColorFormat == COLOR_FormatYUV420SemiPlanar
+                                                            || mColorFormat == COLOR_FormatYUV420PackedSemiPlanar
                                                             || mColorFormat == COLOR_TI_FormatYUV420PackedSemiPlanar) {
-                                                        JNIUtil.yuvConvert2(outputBuffer, realWidth, realHeight, 4);
+
+                                                        byte[] in = new byte[realWidth * realHeight * 3 / 2];
+                                                        outputBuffer.clear();
+                                                        outputBuffer.get(in);
+
+                                                        // yuvuv_to_yuv
+                                                        JNIUtil.yuvConvert(in, realWidth, realHeight, 4);
+//                                                        // 旋转90或180或270度
+//                                                        yuvRotate(in, 0, realWidth, realHeight, 90);
+
+                                                        ByteBuffer tmp = ByteBuffer.allocateDirect(realWidth * realHeight * 3 / 2);
+                                                        tmp.clear();
+                                                        tmp.put(in);
+
+                                                        i420callback.onI420Data(tmp);
+
+                                                        // 旋转90或270度，则宽高需要互换
+                                                        displayer.decoder_decodeBuffer(tmp, realWidth, realHeight);
                                                     }
-//                                                    else if (mColorFormat == COLOR_FormatYUV420Planar){
-////                                                        JNIUtil.yuvConvert2(tmp, realWidth, realHeight, 4);
-//                                                    }
-                                                    i420callback.onI420Data(outputBuffer);
-                                                    displayer.decoder_decodeBuffer(outputBuffer, realWidth, realHeight);
                                                 }
+
                                                 //previewStampUs = info.presentationTimeUs;
                                                 if (false && Build.VERSION.SDK_INT >= 21) {
                                                     Log.d(TAG, String.format("releaseoutputbuffer:%d,stampUs:%d", index, previousStampUs));
@@ -1153,6 +1200,7 @@ public class EasyPlayerClient implements Client.SourceCallBack {
                                                     Thread.sleep(newSleepUs / 1000);
                                                     mCodec.releaseOutputBuffer(index, i420callback == null);
                                                 }
+
                                                 if (firstTime) {
                                                     Log.i(TAG, String.format("POST VIDEO_DISPLAYED!!!"));
                                                     ResultReceiver rr = mRR;
@@ -1174,9 +1222,14 @@ public class EasyPlayerClient implements Client.SourceCallBack {
 
                                     Log.e(TAG, String.format("init codec error due to %s", ex.getMessage()));
 
-                                    if (mCodec != null) mCodec.release();
+                                    if (mCodec != null)
+                                        mCodec.release();
                                     mCodec = null;
-                                    if (displayer != null) displayer.close();
+
+                                    if (displayer != null) {
+                                        displayer.close();
+                                        Log.i(TAG, "AAAA 1217 displayer.close()");
+                                    }
                                     displayer = null;
 
                                     final VideoCodec.VideoDecoderLite decoder = new VideoCodec.VideoDecoderLite();
@@ -1196,15 +1249,20 @@ public class EasyPlayerClient implements Client.SourceCallBack {
 //                        mCodec.stop();
                         mCodec.release();
                     }
+
                     if (mDecoder != null) {
                         mDecoder.close();
+                        Log.i(TAG, "AAAA 1238 mDecoder.close();");
                     }
+
                     if (displayer != null) {
                         displayer.close();
+                        Log.i(TAG, "AAAA 1243 displayer.close();");
                     }
                 }
             }
         };
+
         mThread.start();
     }
 
@@ -1213,6 +1271,7 @@ public class EasyPlayerClient implements Client.SourceCallBack {
             Log.w(TAG, String.format("totalTimestampDifferUs is:%d, this should not be happen.", totalTimestampDifferUs));
             totalTimestampDifferUs = 0;
         }
+
         double dValue = ((double) (delayUs - totalTimestampDifferUs)) / 1000000d;
         double radio = Math.exp(dValue);
         double r = sleepTimeUs * radio + 0.5f;
@@ -1220,11 +1279,11 @@ public class EasyPlayerClient implements Client.SourceCallBack {
         return (long) r;
     }
 
-
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     public synchronized void startRecord(String path) {
         if (mMediaInfo == null || mWidth == 0 || mHeight == 0 || mCSD0 == null)
             return;
+
         mRecordingPath = path;
         EasyMuxer2 muxer2 = new EasyMuxer2();
         mMuxerCuttingMillis = 0l;
@@ -1238,28 +1297,34 @@ public class EasyPlayerClient implements Client.SourceCallBack {
         mCSD0.get(extra, 0, mCSD0.capacity());
         csd1.get(extra, mCSD0.capacity(), csd1.capacity());
 
-        int r = muxer2.create(path, mMediaInfo.videoCodec == EASY_SDK_VIDEO_CODEC_H265 ? VIDEO_TYPE_H265 : VIDEO_TYPE_H264, mWidth, mHeight, extra, mMediaInfo.sample, mMediaInfo.channel);
+        int r = muxer2.create(path,
+                mMediaInfo.videoCodec == EASY_SDK_VIDEO_CODEC_H265 ? VIDEO_TYPE_H265 : VIDEO_TYPE_H264,
+                mWidth, mHeight,
+                extra,
+                mMediaInfo.sample, mMediaInfo.channel);
         if (r != 0) {
             Log.w(TAG, "create muxer2:" + r);
             return;
         }
+
         mMuxerWaitingKeyVideo = true;
         this.muxer2 = muxer2;
+
         ResultReceiver rr = mRR;
         if (rr != null) {
             rr.send(RESULT_RECORD_BEGIN, null);
         }
     }
 
-    public synchronized void pauseRecord(){
-        if (mRecordingStatus !=-1) {
+    public synchronized void pauseRecord() {
+        if (mRecordingStatus != -1) {
             mRecordingStatus = -1;
             muxerPausedMillis = SystemClock.elapsedRealtime();
         }
     }
 
-    public synchronized void resumeRecord(){
-        if (mRecordingStatus == -1){
+    public synchronized void resumeRecord() {
+        if (mRecordingStatus == -1) {
             mMuxerWaitingKeyVideo = true;
             mRecordingStatus = 1;
         }
@@ -1298,27 +1363,34 @@ public class EasyPlayerClient implements Client.SourceCallBack {
         }
     }
 
-
     private synchronized void pumpPCMSample(byte[] pcm, int length, long stampUS) {
         EasyMuxer2 muxer2 = this.muxer2;
-        if (muxer2 == null) return;
-        if (mRecordingStatus < 0) return;
+        if (muxer2 == null)
+            return;
+
+        if (mRecordingStatus < 0)
+            return;
+
         if (mMuxerWaitingKeyVideo) {
             Log.i(TAG, "writeFrame ignore due to no key frame!");
             return;
         }
-        long timeStampMillis = stampUS/1000;
+
+        long timeStampMillis = stampUS / 1000;
         timeStampMillis -= mMuxerCuttingMillis;
         timeStampMillis = Math.max(0, timeStampMillis);
         int r = muxer2.writeFrame(EasyMuxer2.AVMEDIA_TYPE_AUDIO, pcm, 0, length, timeStampMillis);
         Log.i(TAG, "writeFrame audio ret:" + r);
     }
 
-
     private synchronized void pumpVideoSample(Client.FrameInfo frameInfo) {
         EasyMuxer2 muxer2 = this.muxer2;
-        if (muxer2 == null) return;
-        if (mRecordingStatus < 0) return;
+        if (muxer2 == null)
+            return;
+
+        if (mRecordingStatus < 0)
+            return;
+
         if (mMuxerWaitingKeyVideo) {
             if (frameInfo.type == 1) {
                 mMuxerWaitingKeyVideo = false;
@@ -1328,6 +1400,7 @@ public class EasyPlayerClient implements Client.SourceCallBack {
                 }
             }
         }
+
         if (mMuxerWaitingKeyVideo) {
             Log.i(TAG, "writeFrame ignore due to no key frame!");
             return;
@@ -1342,7 +1415,6 @@ public class EasyPlayerClient implements Client.SourceCallBack {
         int r = muxer2.writeFrame(EasyMuxer2.AVMEDIA_TYPE_VIDEO, frameInfo.buffer, frameInfo.offset, frameInfo.length, timeStampMillis);
         Log.i(TAG, "writeFrame video ret:" + r);
     }
-
 
     public synchronized void stopRecord() {
         mRecordingPath = null;
@@ -1417,8 +1489,8 @@ public class EasyPlayerClient implements Client.SourceCallBack {
 //            boolean firstFrame = mNewestStample == 0;
             mNewestStample = frameInfo.stamp;
             frameInfo.audio = false;
-
             if (mWaitingKeyFrame) {
+
                 ResultReceiver rr = mRR;
                 Bundle bundle = new Bundle();
                 bundle.putInt(EXTRA_VIDEO_WIDTH, frameInfo.width);
@@ -1473,56 +1545,31 @@ public class EasyPlayerClient implements Client.SourceCallBack {
                         startRecord(mRecordingPath);
                     }
                 }
-
-                mPusher.initPush(mRtmpUrl, mContext, mRtmpCallBack, 25, mMediaInfo.sample, mMediaInfo.channel);
             } else {
                 int width = frameInfo.width;
                 int height = frameInfo.height;
                 if (width != 0 && height != 0)
-                if (width != mWidth || height != mHeight){
-                    // resolution change...
-                    ResultReceiver rr = mRR;
-                    Bundle bundle = new Bundle();
-                    bundle.putInt(EXTRA_VIDEO_WIDTH, frameInfo.width);
-                    bundle.putInt(EXTRA_VIDEO_HEIGHT, frameInfo.height);
-                    mWidth = frameInfo.width;
-                    mHeight = frameInfo.height;
-                    Log.i(TAG, String.format("RESULT_VIDEO_SIZE:%d*%d", frameInfo.width, frameInfo.height));
-                    if (rr != null) rr.send(RESULT_VIDEO_SIZE, bundle);
-                }
+                    if (width != mWidth || height != mHeight) {
+                        // resolution change...
+                        ResultReceiver rr = mRR;
+                        Bundle bundle = new Bundle();
+                        bundle.putInt(EXTRA_VIDEO_WIDTH, frameInfo.width);
+                        bundle.putInt(EXTRA_VIDEO_HEIGHT, frameInfo.height);
+                        mWidth = frameInfo.width;
+                        mHeight = frameInfo.height;
+                        Log.i(TAG, String.format("RESULT_VIDEO_SIZE:%d*%d", frameInfo.width, frameInfo.height));
+                        if (rr != null) rr.send(RESULT_VIDEO_SIZE, bundle);
+                    }
             }
-
 //            Log.d(TAG, String.format("queue size :%d", mQueue.size()));
-//            try {
-//                mQueue.put(frameInfo);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-
-            if (mPusher != null) {
-
-                int type = EasyRTMP.FrameType.FRAME_TYPE_VIDEO;
-                if (frameInfo.type == 1) {
-                    type = EasyRTMP.FrameType.FRAME_TYPE_KEY_FRAME;
-                }
-
-                mPusher.push(frameInfo.buffer,
-                        frameInfo.offset,
-                        frameInfo.length,
-                        0,
-                        type);
+            try {
+                mQueue.put(frameInfo);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-
         } else if (_frameType == Client.EASY_SDK_AUDIO_FRAME_FLAG) {
             mNewestStample = frameInfo.stamp;
             frameInfo.audio = true;
-
-            if (frameInfo.codec == EASY_SDK_AUDIO_CODEC_AAC) {
-                if (mPusher != null) {
-                    mPusher.push(frameInfo.buffer, frameInfo.offset, frameInfo.length, 0, EasyRTMP.FrameType.FRAME_TYPE_AUDIO);
-                }
-            }
-
             if (true) {
                 if (frameInfo.codec != EASY_SDK_AUDIO_CODEC_AAC &&
                         frameInfo.codec != EASY_SDK_AUDIO_CODEC_G711A &&
@@ -1537,8 +1584,8 @@ public class EasyPlayerClient implements Client.SourceCallBack {
                     }
                     return;
                 }
-            }
 
+            }
 //            Log.d(TAG, String.format("queue size :%d", mQueue.size()));
 //            try {
 //                mQueue.put(frameInfo);
@@ -1598,24 +1645,41 @@ public class EasyPlayerClient implements Client.SourceCallBack {
         * */
         switch (info) {
             case 1:
-                resultData.putString("event-msg", "EasyRTSP 连接中");
+                resultData.putString("event-msg", "连接中...");
                 break;
             case 2:
                 resultData.putInt("errorcode", err);
-                resultData.putString("event-msg", String.format("EasyRTSP 错误：%d", err));
+                resultData.putString("event-msg", String.format("错误：%d", err));
                 break;
             case 3:
                 resultData.putInt("errorcode", err);
-                resultData.putString("event-msg", String.format("EasyRTSP 线程退出。%d", err));
+                resultData.putString("event-msg", String.format("线程退出。%d", err));
                 break;
         }
         if (rr != null) rr.send(RESULT_EVENT, resultData);
     }
 
-    public void setRTMPInfo(Pusher pusher, String url, String key, InitCallback callBack) {
-        mPusher = pusher;
-        mRtmpUrl = url;
-        EASYRTMP_KEY = key;
-        mRtmpCallBack = callBack;
+    /**
+     * 旋转YUV格式数据
+     *
+     * @param src    YUV数据
+     * @param format 0，420P；1，420SP
+     * @param width  宽度
+     * @param height 高度
+     * @param degree 旋转度数
+     */
+    private static void yuvRotate(byte[] src, int format, int width, int height, int degree) {
+        int offset = 0;
+        if (format == 0) {
+            JNIUtil.rotateMatrix(src, offset, width, height, degree);
+            offset += (width * height);
+            JNIUtil.rotateMatrix(src, offset, width / 2, height / 2, degree);
+            offset += width * height / 4;
+            JNIUtil.rotateMatrix(src, offset, width / 2, height / 2, degree);
+        } else if (format == 1) {
+            JNIUtil.rotateMatrix(src, offset, width, height, degree);
+            offset += width * height;
+            JNIUtil.rotateShortMatrix(src, offset, width / 2, height / 2, degree);
+        }
     }
 }

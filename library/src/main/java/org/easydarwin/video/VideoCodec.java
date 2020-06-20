@@ -22,11 +22,17 @@ public class VideoCodec {
 
     protected long mHandle;
 
-    private native int decode(long handle, byte[] in, int offset, int length,int []size);
-    private native ByteBuffer decodeYUV(long handle, byte[] in, int offset, int length, int []size);
+    private native int decode(long handle, byte[] in, int offset, int length, int[] size);
+
+    private native ByteBuffer decodeYUV(long handle, byte[] in, int offset, int length, int[] size);
+
+    private native ByteBuffer decodeYUV0(long handle, byte[] in, int offset, int length, int[] size);
+
     private native void releaseYUV(ByteBuffer buffer);
 
-    private native void decodeYUV2(long handle,ByteBuffer buffer, int width, int height);
+    private native void decodeYUV2(long handle, ByteBuffer buffer, int width, int height);
+
+    public static native void composeYUV(byte[] buffer1, int w1, int h1, byte[] buffer2, int w2, int h2);// int offX, int offY
 
     public int decoder_create(Object surface, int codec) {
         mHandle = create(surface, codec);
@@ -36,16 +42,20 @@ public class VideoCodec {
         return -1;
     }
 
-    public int decoder_decode(byte[] in, int offset, int length, int[]size) {
+    public int decoder_decode(byte[] in, int offset, int length, int[] size) {
         int result = decode(mHandle, in, offset, length, size);
         return result;
     }
 
-    public ByteBuffer decoder_decodeYUV(byte[] in, int offset, int length, int[]size) {
-        ByteBuffer  buffer = decodeYUV(mHandle, in, offset, length, size);
+    public ByteBuffer decoder_decodeYUV(byte[] in, int offset, int length, int[] size) {
+        ByteBuffer buffer = decodeYUV(mHandle, in, offset, length, size);
         return buffer;
     }
 
+    public ByteBuffer decoder_decodeYUV0(byte[] in, int offset, int length, int[] size) {
+        ByteBuffer buffer = decodeYUV0(mHandle, in, offset, length, size);
+        return buffer;
+    }
 
     public void decoder_releaseBuffer(ByteBuffer buffer) {
         releaseYUV(buffer);
@@ -85,15 +95,19 @@ public class VideoCodec {
 
         protected int decodeFrame(Client.FrameInfo aFrame, int[] size) {
             int nRet = 0;
-            nRet = decoder_decode( aFrame.buffer, aFrame.offset, aFrame.length, size);
+            nRet = decoder_decode(aFrame.buffer, aFrame.offset, aFrame.length, size);
             return nRet;
         }
 
-        protected ByteBuffer decodeFrameYUV(Client.FrameInfo aFrame, int []size) {
-            return decoder_decodeYUV( aFrame.buffer, aFrame.offset, aFrame.length, size);
+        protected ByteBuffer decodeFrameYUV(Client.FrameInfo aFrame, int[] size) {
+            return decoder_decodeYUV(aFrame.buffer, aFrame.offset, aFrame.length, size);
         }
 
-        protected void releaseBuffer(ByteBuffer buffer){
+        protected ByteBuffer decodeFrameYUV0(Client.FrameInfo aFrame, int[] size) {
+            return decoder_decodeYUV0(aFrame.buffer, aFrame.offset, aFrame.length, size);
+        }
+
+        protected void releaseBuffer(ByteBuffer buffer) {
             decoder_releaseBuffer(buffer);
         }
 

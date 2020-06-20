@@ -11,29 +11,30 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.CAMERA" />
-
     <uses-permission android:name="android.permission.READ_LOGS" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
 
     <application
-        android:name="org.easydarwin.easyrtsplive.TheApp"
+        android:name=".TheApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher_foreground"
         android:label="@string/app_name"
-        tools:replace="android:label"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:largeHeap="true"
+        android:hardwareAccelerated="false"
+        android:theme="@style/AppTheme"
+        tools:replace="android:label">
+        <activity android:name=".activity.YUVComposeActivity"></activity>
 
         <meta-data
             android:name="UMENG_APPKEY"
             android:value="5700bb7467e58ef3fd000648" />
-
         <meta-data
             android:name="UMENG_CHANNEL"
             android:value="@string/app_flavor" />
 
         <activity
-            android:name="org.easydarwin.easyrtsplive.activity.PlayListActivity"
+            android:name=".activity.PlayListActivity"
             android:label="EasyRTSPLive">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -41,21 +42,25 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
-            android:name="org.easydarwin.easyrtsplive.activity.PushActivity"
+            android:name=".activity.PlayActivity"
             android:configChanges="orientation|keyboardHidden|screenSize" />
-
         <activity
-            android:name="org.easydarwin.easyrtsplive.activity.SplashActivity"
+            android:name=".activity.YUVExportActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize" />
+        <activity
+            android:name=".activity.SettingsActivity"
+            android:label="@string/title_activity_settings" />
+        <activity
+            android:name=".activity.SplashActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_splash"
             android:theme="@style/FullscreenTheme" />
-
-        <activity android:name="org.easydarwin.easyrtsplive.activity.ScanQRActivity" />
-
-        <activity android:name="org.easydarwin.easyrtsplive.activity.AboutActivity"></activity>
-
+        <activity android:name=".activity.ScanQRActivity" />
+        <activity
+            android:name=".activity.MediaFilesActivity"
+            android:label="文件夹" />
+        <activity android:name=".activity.AboutActivity" />
     </application>
 
 </manifest>

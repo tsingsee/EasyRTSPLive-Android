@@ -67,6 +67,32 @@
                 style="@style/Base.Widget.AppCompat.ActionButton"
                 android:layout_gravity="end" />
 
+            <TextView
+                android:id="@+id/toolbar_combine"
+                android:layout_height="match_parent"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:text="合流"
+                android:textColor="@drawable/new_color_text"
+                android:textSize="13sp"
+                android:drawableTop="@drawable/live_video_bar_btn_record"
+                android:paddingTop="8dp"
+                style="@style/Base.Widget.AppCompat.ActionButton"
+                android:layout_gravity="end" />
+
+            <TextView
+                android:id="@+id/toolbar_setting"
+                android:layout_height="match_parent"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:text="设置"
+                android:textColor="@drawable/new_color_text"
+                android:textSize="13sp"
+                android:drawableTop="@drawable/new_setting_btn"
+                android:paddingTop="8dp"
+                style="@style/Base.Widget.AppCompat.ActionButton"
+                android:layout_gravity="end" />
+
         </LinearLayout>
 
         <android.support.v4.widget.SwipeRefreshLayout

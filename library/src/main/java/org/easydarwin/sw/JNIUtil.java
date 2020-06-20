@@ -1,7 +1,5 @@
 package org.easydarwin.sw;
 
-import java.nio.ByteBuffer;
-
 /**
  */
 public class JNIUtil {
@@ -38,7 +36,6 @@ public class JNIUtil {
 
     private static native void callMethod(String methodName, Object[] returnValue, Object... params);
 
-
     /**
      * 0 NULL,
      * 1 yuv_to_yvu,
@@ -55,21 +52,47 @@ public class JNIUtil {
      */
     public static native void yuvConvert(byte[] data, int width, int height, int mode);
 
-    public static native void yuvConvert2(ByteBuffer buffer, int width, int height, int mode);
-
-
     /**
-     * 0 NULL
-     * 1 argb2420
-     * 2 argb2yv12
-     * 3 argb2nv21
+     * Convert camera sample to I420 with cropping, rotation and vertical flip.
      *
-     * @param argb
-     * @param yuv
+     * @param src
+     * @param dst
      * @param width
      * @param height
-     * @param mode
+     * @param cropX      "crop_x" and "crop_y" are starting position for cropping.
+     *                   To center, crop_x = (src_width - dst_width) / 2
+     *                   crop_y = (src_height - dst_height) / 2
+     * @param cropY      "crop_x" and "crop_y" are starting position for cropping.
+     *                   To center, crop_x = (src_width - dst_width) / 2
+     *                   crop_y = (src_height - dst_height) / 2
+     * @param cropWidth
+     * @param cropHeight
+     * @param rotation   "rotation" can be 0, 90, 180 or 270.
+     * @param mode       0:420,1:YV12,2:NV21,3:NV12
      */
-    public static native void argb2yuv(byte[] argb, byte[] yuv, int width, int height, int mode);
+    public static native void ConvertToI420(byte[] src, byte[] dst, int width, int height, int cropX, int cropY, int cropWidth, int cropHeight, int rotation, int mode);
 
+    /**
+     * Convert camera sample to I420 with cropping, rotation and vertical flip.
+     *
+     * @param src
+     * @param dst
+     * @param width
+     * @param height
+     * @param mode   0:420,1:YV12,2:NV21,3:NV12
+     */
+    public static native void ConvertFromI420(byte[] src, byte[] dst, int width, int height, int mode);
+
+    /**
+     * I420压缩.
+     *
+     * @param src
+     * @param dst
+     * @param width
+     * @param height
+     * @param dstWidth
+     * @param dstHeight
+     * @param mode      0:Point sample; Fastest.<p>1:Filter horizontally only.<p>2:Faster than box, but lower quality scaling down.<p>3:Highest quality.
+     */
+    public static native void I420Scale(byte[] src, byte[] dst, int width, int height, int dstWidth, int dstHeight, int mode);
 }

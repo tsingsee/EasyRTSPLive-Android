@@ -8,17 +8,13 @@ android {
         applicationId "org.easydarwin.easyrtsplive"
         minSdkVersion 19
         targetSdkVersion 26
-        versionCode 14200428
-        versionName "1.4.20.0428"
+        versionCode 14200620
+        versionName "1.4.20.0620"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        buildConfigField 'boolean', 'YUV_EXPORT', 'true'
 
-        buildConfigField 'String', 'RTSP_KEY', '\"6D75724D7A4A36526D343041637164656F56694E772B5276636D63755A57467A65575268636E64706269356C59584E35636E527A63477870646D5658444661672F3850695257467A65555268636E6470626C526C5957314A6331526F5A554A6C6333516A4D6A41784F546C6C59584E35\"'
-        buildConfigField 'String', 'RTMP_KEY', "\"79736C36655A36526D343041637164656F56694E772B5276636D63755A57467A65575268636E64706269356C59584E35636E527A63477870646D5658444661672F3850695257467A65555268636E6470626C526C5957314A6331526F5A554A6C6333516A4D6A41784F546C6C59584E35\""
-
-        ndk {
-            //设置支持的SO库架构
-            abiFilters 'armeabi', 'x86', 'armeabi-v7a', 'x86_64', 'arm64-v8a'
-        }
+        buildConfigField 'String', 'RTSP_KEY', '\"6D75724D7A4A36526D34324132594E656F58776D4A655A76636D63755A57467A65575268636E64706269356C59584E356347786865575679567778576F502B6C346B566863336C4559584A33615735555A57467453584E55614756435A584E30497A49774D546B355A57467A65513D3D\"'
+        buildConfigField 'String', 'RTMP_KEY', "\"79736C36655A36526D34324132594E656F58776D4A656876636D63755A57467A65575268636E64706269356C59584E35636E52746346634D5671442F70654A4659584E355247467964326C755647566862556C7A5647686C516D567A64434D794D4445354F57566863336B3D\""
     }
 
     buildTypes {
@@ -78,8 +74,6 @@ dependencies {
     androidTestImplementation "com.android.support.test:rules:0.5"
     androidTestImplementation 'junit:junit:4.12'
 
-    implementation 'com.tencent.bugly:crashreport_upgrade:latest.release'//其中latest.release指代最新版本号，也可以指定明确的版本号，例如1.2.0
-    implementation 'com.tencent.bugly:nativecrashreport:latest.release' //其中latest.release指代最新版本号，也可以指定明确的版本号，例如2.2.0
-
+    implementation 'com.tencent.bugly:crashreport:2.6.5'
     implementation 'com.budiyev.android:code-scanner:1.9.4'
 }
