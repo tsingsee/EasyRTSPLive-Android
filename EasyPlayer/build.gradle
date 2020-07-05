@@ -8,13 +8,13 @@ android {
         applicationId "org.easydarwin.easyrtsplive"
         minSdkVersion 19
         targetSdkVersion 26
-        versionCode 14200620
-        versionName "1.4.20.0620"
+        versionCode 14200630
+        versionName "1.4.20.0630"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-        buildConfigField 'boolean', 'YUV_EXPORT', 'true'
+        buildConfigField 'boolean', 'YUV_EXPORT', 'false'
 
-        buildConfigField 'String', 'RTSP_KEY', '\"6D75724D7A4A36526D34324132594E656F58776D4A655A76636D63755A57467A65575268636E64706269356C59584E356347786865575679567778576F502B6C346B566863336C4559584A33615735555A57467453584E55614756435A584E30497A49774D546B355A57467A65513D3D\"'
-        buildConfigField 'String', 'RTMP_KEY', "\"79736C36655A36526D34324132594E656F58776D4A656876636D63755A57467A65575268636E64706269356C59584E35636E52746346634D5671442F70654A4659584E355247467964326C755647566862556C7A5647686C516D567A64434D794D4445354F57566863336B3D\""
+        buildConfigField 'String', 'RTSP_KEY', '\"6D75724D7A4A36526D3432416C2F4A656F51316F50655A76636D63755A57467A65575268636E64706269356C59584E356347786865575679567778576F502B392F32566863336B3D\"'
+        buildConfigField 'String', 'RTMP_KEY', "\"79736C36655A36526D3432416C2F4A656F51316F50656876636D63755A57467A65575268636E64706269356C59584E35636E52746346634D5671442F7666396C59584E35\""
     }
 
     buildTypes {
@@ -32,6 +32,11 @@ android {
         variant.outputs.all {
             outputFileName = "EasyRTSPLive-" + variant.versionCode + "-" + variant.versionName + ".apk"
         }
+    }
+
+    compileOptions {
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
     }
 
     lintOptions {
@@ -54,6 +59,10 @@ dependencies {
     implementation project(':library')
 
     implementation(name: 'texturegesture-release', ext: 'aar')
+    implementation(name: 'libuvccamera-release', ext: 'aar') {
+        exclude module: 'support-v4'
+        exclude module: 'appcompat-v7'
+    }
 
     implementation "com.android.support:appcompat-v7:$support_version"
     implementation "com.android.support:support-v4:$support_version"
@@ -76,4 +85,11 @@ dependencies {
 
     implementation 'com.tencent.bugly:crashreport:2.6.5'
     implementation 'com.budiyev.android:code-scanner:1.9.4'
+
+    implementation 'android.arch.lifecycle:extensions:1.0.0'
+    implementation 'android.arch.lifecycle:reactivestreams:1.0.0'
+    implementation 'android.arch.lifecycle:extensions:1.0.0'
+    implementation 'android.arch.lifecycle:reactivestreams:1.0.0'
+    annotationProcessor "android.arch.lifecycle:compiler:1.0.0"
+    annotationProcessor "android.arch.lifecycle:compiler:1.0.0"
 }

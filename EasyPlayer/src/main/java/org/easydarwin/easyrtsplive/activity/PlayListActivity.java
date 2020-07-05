@@ -417,11 +417,6 @@ public class PlayListActivity extends AppCompatActivity implements View.OnClickL
         final EditText edit2 = view.findViewById(R.id.combine_source_url2);
         final EditText edit3 = view.findViewById(R.id.combine_source_url3);
 
-//        edit1.setText("rtsp://shiping:EasyDarwin@112.26.187.12/Streaming/Channels/101");
-//        edit2.setText("rtsp://shiping:EasyDarwin@112.26.187.12/Streaming/Channels/101");
-////        edit2.setText("rtsp://admin:ranqi333@114.242.130.60:556/h264/ch1/sub/av_stream");
-//        edit3.setText("rtmp://demo.easydss.com:10085/hls/Seven23?sign=BklPCT0Wg");
-
         final AlertDialog dlg = new AlertDialog.Builder(PlayListActivity.this)
                 .setView(view)
                 .setTitle("请输入播放地址")

@@ -65,7 +65,6 @@ public class VideoCodec {
         decodeYUV2(mHandle, buffer, width, height);
     }
 
-
     public void decoder_close() {
         if (mHandle == 0) {
             return;

@@ -6,31 +6,46 @@
     android:layout_height="match_parent"
     android:layout_gravity="center">
 
-    <ImageView
-        android:id="@+id/surface_cover"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#000000"
-        android:scaleType="centerCrop"/>
+        android:padding="1dp"
+        android:orientation="vertical">
 
-    <TextureView
-        android:id="@+id/surface_view"
-        android:layout_gravity="center"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        <TextureView
+            android:id="@+id/native_surface_view"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
 
-    <TextureView
-        android:id="@+id/native_surface_view"
-        android:layout_gravity="center_horizontal"
-        android:layout_width="320dp"
-        android:layout_height="180dp" />
+        <TextureView
+            android:id="@+id/surface_view"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="2dp"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
 
-    <org.easydarwin.easyrtsplive.views.OverlayCanvasView
-        android:id="@+id/overlay_canvas"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#000000"
-        android:scaleType="centerCrop"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+            <TextureView
+                android:id="@+id/surface_view1"
+                android:layout_gravity="right"
+                android:layout_marginRight="2dp"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"/>
+            <TextureView
+                android:id="@+id/surface_view2"
+                android:layout_gravity="right"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"/>
+        </LinearLayout>
+    </LinearLayout>
 
     <ProgressBar
         android:id="@android:id/progress"
@@ -38,52 +53,10 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center" />
 
-    <org.easydarwin.easyrtsplive.views.AngleView
-        android:id="@+id/render_angle_view"
-        android:layout_width="100dp"
-        android:layout_height="50dp"
-        android:layout_gravity="bottom|center_horizontal"
-        android:paddingBottom="10dp"
-        android:paddingLeft="10dp"
-        android:paddingRight="10dp"
-        android:paddingTop="10dp"
-        android:visibility="invisible"
-        app:anchorRadio="5dp"
-        app:arcColor="#ffffffff"
-        app:arcWidth="2.5dp"
-        app:currentSweepAngle="45"
-        app:startAngle="225"
-        app:sweepAngle="90"
-        app:textSize="24sp" />
-
-    <ImageView
-        android:id="@+id/live_video_snap_thumb"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_gravity="right|bottom"
-        android:layout_margin="3dp"
-        android:clickable="true"
-        android:gravity="center"
-        android:onClick="onTakePictureThumbClicked"
-        android:padding="3dp"
-        android:scaleType="centerCrop"
-        android:visibility="invisible" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        style="@style/Widget.AppCompat.ActionButton"
-        android:text="退出全屏"
-        android:gravity="center"
-        android:id="@+id/quit_fullscreen"
-        android:visibility="gone"
-        android:textColor="#fff"
-        android:layout_gravity="right|top"
-        android:layout_height="wrap_content" />
-
     <LinearLayout
         android:layout_width="wrap_content"
         android:orientation="vertical"
-        android:layout_gravity="bottom"
+        android:layout_gravity="top|right"
         android:layout_height="wrap_content">
 
         <Button

@@ -326,7 +326,7 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
         mClient = new Client(mContext, mKey);
         int channel = mClient.registerCallback(this);
 
-        Log.i(TAG, String.format("playing url:\n%s\n", url));
+        Log.i(TAG, mIndex + " >> " + String.format("playing url:\n%s\n", url));
         return mClient.openStream(channel, url, type, sendOption, mediaType, user, pwd);
     }
 
@@ -338,7 +338,7 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
         mAudioEnable = enable;
         AudioTrack at = mAudioTrack;
         if (at != null) {
-            Log.i(TAG, String.format("audio will be %s", enable ? "enabled" : "disabled"));
+            Log.i(TAG, mIndex + " >> " + String.format("audio will be %s", enable ? "enabled" : "disabled"));
             synchronized (at) {
                 if (!enable) {
                     at.pause();
@@ -480,7 +480,7 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
 
                     handle = AudioCodec.create(frameInfo.codec, frameInfo.sample_rate, frameInfo.channels, frameInfo.bits_per_sample);
 
-                    Log.w(TAG, String.format("POST VIDEO_DISPLAYED IN AUDIO THREAD!!!"));
+                    Log.w(TAG, mIndex + " >> " + String.format("POST VIDEO_DISPLAYED IN AUDIO THREAD!!!"));
                     ResultReceiver rr = mRR;
                     if (rr != null) rr.send(RESULT_VIDEO_DISPLAYED, null);
 
@@ -676,7 +676,7 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
 
             if (codecMatch("video/avc", codecInfo)) {
                 String name = codecInfo.getName();
-                Log.d("DECODER", String.format("decoder:%s", name));
+                Log.d(TAG, String.format("decoder:%s", name));
                 array.add(name);
             }
         }
@@ -790,19 +790,19 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
                                     MediaCodecInfo.CodecCapabilities capabilities = ci.getCapabilitiesForType(mime);
                                     MediaCodecInfo.VideoCapabilities videoCapabilities = capabilities.getVideoCapabilities();
                                     boolean supported = videoCapabilities.isSizeSupported(mWidth, mHeight);
-                                    Log.i(TAG, "media codec " + ci.getName() + (supported ? "support" : "not support") + mWidth + "*" + mHeight);
+                                    Log.i(TAG, mIndex + " >> " + "media codec " + ci.getName() + (supported ? "support" : "not support") + mWidth + "*" + mHeight);
                                     if (!supported) {
                                         boolean b1 = videoCapabilities.getSupportedWidths().contains(mWidth + 0);
                                         boolean b2 = videoCapabilities.getSupportedHeights().contains(mHeight + 0);
                                         supported |= b1 && b2;
                                         if (supported) {
-                                            Log.w(TAG, ".......................................................................");
+                                            Log.w(TAG, mIndex + " >> " + ".......................................................................");
                                         } else {
                                             throw new IllegalStateException("media codec " + ci.getName() + (supported ? "support" : "not support") + mWidth + "*" + mHeight);
                                         }
                                     }
                                 }
-                                Log.i(TAG, String.format("config codec:%s", format));
+                                Log.i(TAG, mIndex + " >> " + String.format("config codec:%s", format));
 
                                 MediaCodec codec = MediaCodec.createByCodecName(ci.getName());
                                 codec.configure(format, i420callback != null ? null : mSurface, null, 0);
@@ -814,7 +814,7 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
                                 if (mCodec != null) mCodec.release();
                                 mCodec = null;
 
-                                Log.e(TAG, String.format("init codec error due to %s", e.getMessage()));
+                                Log.e(TAG, mIndex + " >> " + String.format("init codec error due to %s", e.getMessage()));
                                 e.printStackTrace();
 
                                 final VideoCodec.VideoDecoderLite decoder = new VideoCodec.VideoDecoderLite();
@@ -839,7 +839,7 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
                         }
 
                         if (frameInfo != null) {
-                            Log.d(TAG, "video " + frameInfo.stamp + " take[" + (frameInfo.stamp - lastFrameStampUs) + "]");
+                            Log.d(TAG, mIndex + " >> " + "video " + frameInfo.stamp + " take[" + (frameInfo.stamp - lastFrameStampUs) + "]");
                             if (frameHeight != 0 && frameWidth != 0) {
                                 if (frameInfo.width != 0 && frameInfo.height != 0) {
                                     if (frameInfo.width != frameWidth || frameInfo.height != frameHeight) {
@@ -882,7 +882,7 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
 
                                     boolean firstFrame = previousStampUs == 0l;
                                     if (firstFrame) {
-                                        Log.i(TAG, String.format("POST VIDEO_DISPLAYED!!!"));
+                                        Log.i(TAG, mIndex + " >> " + String.format("POST VIDEO_DISPLAYED!!!"));
                                         ResultReceiver rr = mRR;
                                         if (rr != null) {
                                             Bundle data = new Bundle();
@@ -891,12 +891,12 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
                                         }
                                     }
 
-                                    //Log.d(TAG, String.format("timestamp=%d diff=%d",current, current - previousStampUs ));
+                                    //Log.d(TAG, mIndex + " >> " + String.format("timestamp=%d diff=%d",current, current - previousStampUs ));
 
                                     if (previousStampUs != 0l) {
                                         long sleepTime = frameInfo.stamp - previousStampUs - decodeSpend * 1000;
                                         if (sleepTime > 100000) {
-                                            Log.w(TAG, "sleep time.too long:" + sleepTime);
+                                            Log.w(TAG, mIndex + " >> " + "sleep time.too long:" + sleepTime);
                                             sleepTime = 100000;
                                         }
 
@@ -907,7 +907,7 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
                                             if (sleepTime > 0) {
                                                 Thread.sleep(sleepTime / 1000);
                                             }
-                                            Log.d(TAG, "cache:" + cache);
+                                            Log.d(TAG, mIndex + " >> " + "cache:" + cache);
                                         }
                                     }
 
@@ -937,11 +937,11 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
                                         index = mCodec.dequeueOutputBuffer(info, 10); //
                                         switch (index) {
                                             case MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED:
-                                                Log.i(TAG, "INFO_OUTPUT_BUFFERS_CHANGED");
+                                                Log.i(TAG, mIndex + " >> " + "INFO_OUTPUT_BUFFERS_CHANGED");
                                                 break;
                                             case MediaCodec.INFO_OUTPUT_FORMAT_CHANGED:
                                                 MediaFormat mf = mCodec.getOutputFormat();
-                                                Log.i(TAG, "INFO_OUTPUT_FORMAT_CHANGED ：" + mf);
+                                                Log.i(TAG, mIndex + " >> " + "INFO_OUTPUT_FORMAT_CHANGED ：" + mf);
                                                 int width = mf.getInteger(MediaFormat.KEY_WIDTH);
                                                 if (mf.containsKey("crop-left") && mf.containsKey("crop-right")) {
                                                     width = mf.getInteger("crop-right") + 1 - mf.getInteger("crop-left");
@@ -971,17 +971,17 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
                                                     long sleepUs = (info.presentationTimeUs - previousStampUs);
                                                     if (sleepUs > 100000) {
                                                         // 时间戳异常，可能服务器丢帧了。
-                                                        Log.w(TAG, "sleep time.too long:" + sleepUs);
+                                                        Log.w(TAG, mIndex + " >> " + "sleep time.too long:" + sleepUs);
                                                         sleepUs = 100000;
                                                     } else if (sleepUs < 0) {
-                                                        Log.w(TAG, "sleep time.too short:" + sleepUs);
+                                                        Log.w(TAG, mIndex + " >> " + "sleep time.too short:" + sleepUs);
                                                         sleepUs = 0;
                                                     }
 
                                                     {
                                                         long cache = mNewestStample - lastFrameStampUs;
                                                         newSleepUs = fixSleepTime(sleepUs, cache, 100000);
-                                                        // Log.d(TAG, String.format("sleepUs:%d,newSleepUs:%d,Cache:%d", sleepUs, newSleepUs, cache));
+                                                        // Log.d(TAG, mIndex + " >> " + String.format("sleepUs:%d,newSleepUs:%d,Cache:%d", sleepUs, newSleepUs, cache));
                                                     }
                                                 }
 
@@ -1034,7 +1034,7 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
                                                 }
 
                                                 if (false && Build.VERSION.SDK_INT >= 21) {
-                                                    Log.d(TAG, String.format("releaseoutputbuffer:%d,stampUs:%d", index, previousStampUs));
+                                                    Log.d(TAG, mIndex + " >> " + String.format("releaseoutputbuffer:%d,stampUs:%d", index, previousStampUs));
                                                     mCodec.releaseOutputBuffer(index, previousStampUs);
                                                 } else {
                                                     if (newSleepUs < 0) {
@@ -1046,7 +1046,7 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
                                                 }
 
                                                 if (firstTime) {
-                                                    Log.i(TAG, String.format("POST VIDEO_DISPLAYED!!!"));
+                                                    Log.i(TAG, mIndex + " >> " + String.format("POST VIDEO_DISPLAYED!!!"));
                                                     ResultReceiver rr = mRR;
                                                     if (rr != null) {
                                                         Bundle data = new Bundle();
@@ -1063,7 +1063,7 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
 
                                     ex.printStackTrace();
 
-                                    Log.e(TAG, String.format("init codec error due to %s", ex.getMessage()));
+                                    Log.e(TAG, mIndex + " >> " + String.format("init codec error due to %s", ex.getMessage()));
 
                                     if (mCodec != null) mCodec.release();
                                     mCodec = null;
@@ -1112,6 +1112,7 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
             Log.w(TAG, String.format("totalTimestampDifferUs is:%d, this should not be happen.", totalTimestampDifferUs));
             totalTimestampDifferUs = 0;
         }
+
         double dValue = ((double) (delayUs - totalTimestampDifferUs)) / 1000000d;
         double radio = Math.exp(dValue);
         double r = sleepTimeUs * radio + 0.5f;
@@ -1151,7 +1152,7 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
         } catch (Throwable e) {
             e.printStackTrace();
         } finally {
-//            Log.d(TAG, String.format("onRTSPSourceCallBack %d", SystemClock.elapsedRealtime() - begin));
+//            Log.d(TAG, mIndex + " >> " + String.format("onRTSPSourceCallBack %d", SystemClock.elapsedRealtime() - begin));
         }
     }
 
@@ -1161,7 +1162,7 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
             mReceivedDataLength += frameInfo.length;
         }
         if (_frameType == Client.EASY_SDK_VIDEO_FRAME_FLAG) {
-            //Log.d(TAG,String.format("receive video frame"));
+            //Log.d(TAG, mIndex + " >> " + String.format("receive video frame"));
             if (frameInfo.codec != EASY_SDK_VIDEO_CODEC_H264 && frameInfo.codec != EASY_SDK_VIDEO_CODEC_H265) {
                 ResultReceiver rr = mRR;
                 if (!mNotSupportedVideoCB && rr != null) {
@@ -1189,11 +1190,11 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
 //            int offset = frameInfo.offset;
 //            byte nal_unit_type = (byte) (frameInfo.buffer[offset + 4] & (byte) 0x1F);
 //            if (nal_unit_type == 7 || nal_unit_type == 5) {
-//                Log.i(TAG,String.format("recv I frame"));
+//                Log.i(TAG, mIndex + " >> " + String.format("recv I frame"));
 //            }
 
             if (frameInfo.type == 1) {
-                Log.i(TAG, String.format("recv I frame"));
+                Log.i(TAG, mIndex + " >> " + String.format("recv I frame"));
             }
 
             mNewestStample = frameInfo.stamp;
@@ -1206,11 +1207,10 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
                 bundle.putInt(EXTRA_VIDEO_HEIGHT, frameInfo.height);
                 mWidth = frameInfo.width;
                 mHeight = frameInfo.height;
-                Log.i(TAG, String.format("RESULT_VIDEO_SIZE:%d*%d", frameInfo.width, frameInfo.height));
+                Log.i(TAG, mIndex + " >> " + String.format("RESULT_VIDEO_SIZE:%d*%d", frameInfo.width, frameInfo.height));
                 if (rr != null) rr.send(RESULT_VIDEO_SIZE, bundle);
 
-
-                Log.i(TAG, String.format("width:%d,height:%d", mWidth, mHeight));
+                Log.i(TAG, mIndex + " >> " + String.format("width:%d,height:%d", mWidth, mHeight));
 
                 if (frameInfo.codec == EASY_SDK_VIDEO_CODEC_H264) {
                     byte[] dataOut = new byte[128];
@@ -1221,8 +1221,9 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
                         csd0.put(dataOut, 0, outLen[0]);
                         csd0.clear();
                         mCSD0 = csd0;
-                        Log.i(TAG, String.format("CSD-0 searched"));
+                        Log.i(TAG, mIndex + " >> " + String.format("CSD-0 searched"));
                     }
+
                     outLen[0] = 128;
                     result = getXPS(frameInfo.buffer, 0, 256, dataOut, outLen, 8);
                     if (result >= 0) {
@@ -1230,8 +1231,9 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
                         csd1.put(dataOut, 0, outLen[0]);
                         csd1.clear();
                         mCSD1 = csd1;
-                        Log.i(TAG, String.format("CSD-1 searched"));
+                        Log.i(TAG, mIndex + " >> " + String.format("CSD-1 searched"));
                     }
+
                     if (false) {
                         int off = (result - frameInfo.offset);
                         frameInfo.offset += off;
@@ -1245,7 +1247,7 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
                 }
 
                 if (frameInfo.type != 1) {
-                    Log.w(TAG, String.format("discard p frame."));
+                    Log.w(TAG, mIndex + " >> " + String.format("discard p frame."));
                     return;
                 }
                 mWaitingKeyFrame = false;
@@ -1265,7 +1267,7 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
                         if (rr != null) rr.send(RESULT_VIDEO_SIZE, bundle);
                     }
             }
-//            Log.d(TAG, String.format("queue size :%d", mQueue.size()));
+//            Log.d(TAG, mIndex + " >> " + String.format("queue size :%d", mQueue.size()));
             try {
                 mQueue.put(frameInfo);
             } catch (InterruptedException e) {
@@ -1295,7 +1297,7 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
                 return;
             }
 
-//            Log.d(TAG, String.format("queue size :%d", mQueue.size()));
+//            Log.d(TAG, mIndex + " >> " + String.format("queue size :%d", mQueue.size()));
             try {
                 mQueue.put(frameInfo);
             } catch (InterruptedException e) {
@@ -1319,7 +1321,7 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
     @Override
     public void onMediaInfoCallBack(int _channelId, Client.MediaInfo mi) {
         mMediaInfo = mi;
-        Log.i(TAG, String.format("MediaInfo fetchd\n%s", mi));
+        Log.i(TAG, mIndex + " >> " + String.format("MediaInfo fetchd\n%s", mi));
     }
 
     @Override
@@ -1375,8 +1377,9 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
                 mWidth, mHeight,
                 extra,
                 mMediaInfo.sample, mMediaInfo.channel);
+
         if (r != 0) {
-            Log.w(TAG, "create muxer2:" + r);
+            Log.w(TAG, mIndex + " >> " + "create muxer2:" + r);
             return;
         }
 
@@ -1416,7 +1419,7 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
             return;
 
         if (mMuxerWaitingKeyVideo) {
-            Log.i(TAG, "writeFrame ignore due to no key frame!");
+            Log.i(TAG, mIndex + " >> " + "writeFrame ignore due to no key frame!");
             return;
         }
 
@@ -1424,7 +1427,7 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
         timeStampMillis -= mMuxerCuttingMillis;
         timeStampMillis = Math.max(0, timeStampMillis);
         int r = muxer2.writeFrame(EasyMuxer2.AVMEDIA_TYPE_AUDIO, pcm, 0, length, timeStampMillis);
-        Log.i(TAG, "writeFrame audio ret:" + r);
+        Log.i(TAG, mIndex + " >> " + "writeFrame audio ret:" + r);
     }
 
     public synchronized void pumpVideoSample(Client.FrameInfo frameInfo) {
@@ -1446,7 +1449,7 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
         }
 
         if (mMuxerWaitingKeyVideo) {
-            Log.i(TAG, "writeFrame ignore due to no key frame!");
+            Log.i(TAG, mIndex + " >> " + "writeFrame ignore due to no key frame!");
             return;
         }
 
@@ -1464,6 +1467,6 @@ public class EasyPlayerClient2 implements Client.SourceCallBack {
                 frameInfo.offset,
                 frameInfo.length,
                 timeStampMillis);
-        Log.i(TAG, "writeFrame video ret:" + r);
+        Log.i(TAG, mIndex + " >> " + "writeFrame video ret:" + r);
     }
 }

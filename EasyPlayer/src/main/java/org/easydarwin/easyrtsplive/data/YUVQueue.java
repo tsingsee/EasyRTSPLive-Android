@@ -11,8 +11,8 @@ import java.util.concurrent.locks.ReentrantLock;
 public class YUVQueue extends PriorityQueue<ByteBuffer> {
     private static final String TAG = YUVQueue.class.getSimpleName();
 
-    public static final int CAPACITY = 100;
-    public static final int INITIAL_CAPACITY = 300;
+    public static final int CAPACITY = 50;
+    public static final int INITIAL_CAPACITY = 50;
 
     public YUVQueue() {
         super(INITIAL_CAPACITY, new Comparator<ByteBuffer>() {

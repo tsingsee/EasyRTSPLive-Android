@@ -39,23 +39,8 @@ public class YUVComposeActivity extends AppCompatActivity {
         int sendOption = getIntent().getIntExtra(VideoSource.SEND_OPTION, 0);
         boolean isCamera = intent.getBooleanExtra("isCamera", true);
 
-        ResultReceiver rr = new ResultReceiver(new Handler()) {
-            @Override
-            protected void onReceiveResult(int resultCode, Bundle resultData) {
-                super.onReceiveResult(resultCode, resultData);
-
-                if (resultCode == PlayFragment.RESULT_REND_START) {
-//                    onPlayStart();
-                } else if (resultCode == PlayFragment.RESULT_REND_STOP) {
-//                    onPlayStop();
-                } else if (resultCode == PlayFragment.RESULT_REND_VIDEO_DISPLAY) {
-//                    onVideoDisplayed();
-                }
-            }
-        };
-
         YUVComposeFragment fragment = YUVComposeFragment.newInstance(rtmpUrl, rtspUrl1, rtspUrl2,
-                transportMode, sendOption, isCamera, rr);
+                transportMode, sendOption, isCamera);
         getSupportFragmentManager().beginTransaction().add(R.id.render_holder, fragment, "first").commit();
 
         // 动态获取camera和audio权限

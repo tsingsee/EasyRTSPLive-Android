@@ -1,4 +1,4 @@
-package org.easydarwin.easyrtmp.push;
+package org.easydarwin.easyrtsplive.push;
 
 import android.content.Context;
 import android.graphics.ImageFormat;
@@ -33,7 +33,7 @@ import static android.media.MediaCodecInfo.CodecCapabilities.COLOR_TI_FormatYUV4
 
 /**
  * 摄像头实时数据采集，并调用相关编码器
- */
+ * */
 public class MediaStream {
     private static final String TAG = MediaStream.class.getSimpleName();
     private static final int SWITCH_CAMERA = 11;
@@ -51,12 +51,11 @@ public class MediaStream {
      */
     public MediaStream(Context context, SurfaceTexture texture, PreviewFrameCallback callback) {
         this.context = context;
+        previewFrameCallback = callback;
 
         if (texture != null) {
             mSurfaceHolderRef = new WeakReference(texture);
         }
-
-        previewFrameCallback = callback;
 
         mCameraThread = new HandlerThread("CAMERA") {
             public void run() {
@@ -85,15 +84,12 @@ public class MediaStream {
         };
     }
 
-    /// 初始化摄像头
+    // 初始化摄像头
     public void createCamera() {
         if (Thread.currentThread() != mCameraThread) {
-            mCameraHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    Process.setThreadPriority(Process.THREAD_PRIORITY_DEFAULT);
-                    createCamera();
-                }
+            mCameraHandler.post(() -> {
+                Process.setThreadPriority(Process.THREAD_PRIORITY_DEFAULT);
+                createCamera();
             });
 
             return;
@@ -105,13 +101,9 @@ public class MediaStream {
     private void createNativeCamera() {
         try {
             mCamera = Camera.open(mCameraId);// 初始化创建Camera实例对象
-            mCamera.setErrorCallback(new Camera.ErrorCallback() {
-                @Override
-                public void onError(int i, Camera camera) {
-                    throw new IllegalStateException("Camera Error:" + i);
-                }
+            mCamera.setErrorCallback((i, camera) -> {
+                throw new IllegalStateException("Camera Error:" + i);
             });
-
             Log.i(TAG, "open Camera");
 
             parameters = mCamera.getParameters();
@@ -166,6 +158,23 @@ public class MediaStream {
                 parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
             }
 
+//            int maxExposureCompensation = parameters.getMaxExposureCompensation();
+//            parameters.setExposureCompensation(3);
+//
+//            if(parameters.isAutoExposureLockSupported()) {
+//                parameters.setAutoExposureLock(false);
+//            }
+
+//            parameters.setWhiteBalance(Camera.Parameters.WHITE_BALANCE_AUTO);
+//            parameters.setFlashMode(Camera.Parameters.FLASH_MODE_AUTO);
+//            parameters.setSceneMode(Camera.Parameters.SCENE_MODE_AUTO);
+//            parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+//            mCamera.setFaceDetectionListener(new );
+
+//            if (parameters.isAutoWhiteBalanceLockSupported()){
+//                parameters.setAutoExposureLock(false);
+//            }
+
             mCamera.setParameters(parameters);
             Log.i(TAG, "setParameters");
 
@@ -173,12 +182,13 @@ public class MediaStream {
             displayRotation = (cameraRotationOffset - displayRotationDegree + 360) % 360;
             mCamera.setDisplayOrientation(displayRotation);
 
-            Log.i(TAG, "setDisplayOrientation " + displayRotation);
+            Log.i(TAG, "setDisplayOrientation");
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
             e.printStackTrace(pw);
 
+//            String stack = sw.toString();
             destroyCamera();
             e.printStackTrace();
         }
@@ -187,12 +197,7 @@ public class MediaStream {
     /// 销毁Camera
     public synchronized void destroyCamera() {
         if (Thread.currentThread() != mCameraThread) {
-            mCameraHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    destroyCamera();
-                }
-            });
+            mCameraHandler.post(() -> destroyCamera());
             return;
         }
 
@@ -216,14 +221,7 @@ public class MediaStream {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
             mCameraThread.quitSafely();
         } else {
-            boolean res = mCameraHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    mCameraThread.quit();
-                }
-            });
-
-            if (!res) {
+            if (!mCameraHandler.post(() -> mCameraThread.quit())) {
                 mCameraThread.quit();
             }
         }
@@ -238,17 +236,13 @@ public class MediaStream {
     /// 开启预览
     public synchronized void startPreview() {
         if (Thread.currentThread() != mCameraThread) {
-            mCameraHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    startPreview();
-                }
-            });
-
+            mCameraHandler.post(() -> startPreview());
             return;
         }
 
-        startCameraPreview();
+        if (mCamera != null) {
+            startCameraPreview();
+        }
     }
 
     private void startCameraPreview() {
@@ -267,15 +261,13 @@ public class MediaStream {
         Log.i(TAG, "setPreviewCallbackWithBuffer");
 
         try {
-            if (mSurfaceHolderRef != null) {
-                // TextureView的
-                SurfaceTexture holder = mSurfaceHolderRef.get();
+            // TextureView的
+            SurfaceTexture holder = mSurfaceHolderRef.get();
 
-                // SurfaceView传入上面创建的Camera对象
-                if (holder != null) {
-                    mCamera.setPreviewTexture(holder);
-                    Log.i(TAG, "setPreviewTexture");
-                }
+            // SurfaceView传入上面创建的Camera对象
+            if (holder != null) {
+                mCamera.setPreviewTexture(holder);
+                Log.i(TAG, "setPreviewTexture");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -298,16 +290,9 @@ public class MediaStream {
     /// 停止预览
     public synchronized void stopPreview() {
         if (Thread.currentThread() != mCameraThread) {
-            mCameraHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    stopPreview();
-                }
-            });
+            mCameraHandler.post(() -> stopPreview());
             return;
         }
-
-//        mCameraHandler.removeCallbacks(dequeueRunnable);
 
         // 关闭摄像头
         if (mCamera != null) {
@@ -325,12 +310,9 @@ public class MediaStream {
         stopPreview();
         destroyCamera();
 
-        mCameraHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                defaultWidth = w;
-                defaultHeight = h;
-            }
+        mCameraHandler.post(() -> {
+            defaultWidth = w;
+            defaultHeight = h;
         });
 
         createCamera();
@@ -343,21 +325,20 @@ public class MediaStream {
      * 默认后置摄像头
      *   Camera.CameraInfo.CAMERA_FACING_BACK
      *   Camera.CameraInfo.CAMERA_FACING_FRONT
-     *   CAMERA_FACING_BACK_UVC
      * */
     int mCameraId = Camera.CameraInfo.CAMERA_FACING_BACK;
     public static final int CAMERA_FACING_BACK_LOOP = -1;
 
-    int defaultWidth = 1920, defaultHeight = 1080;
+    int defaultWidth = 1280, defaultHeight = 720;
     private int mTargetCameraId;
 
     /**
      * 切换前后摄像头
-     * CAMERA_FACING_BACK_LOOP                 循环切换摄像头
-     * Camera.CameraInfo.CAMERA_FACING_BACK    后置摄像头
-     * Camera.CameraInfo.CAMERA_FACING_FRONT   前置摄像头
-     * CAMERA_FACING_BACK_UVC                  UVC摄像头
-     */
+     *  CAMERA_FACING_BACK_LOOP                 循环切换摄像头
+     *  Camera.CameraInfo.CAMERA_FACING_BACK    后置摄像头
+     *  Camera.CameraInfo.CAMERA_FACING_FRONT   前置摄像头
+     *  CAMERA_FACING_BACK_UVC                  UVC摄像头
+     * */
     public void switchCamera(int cameraId) {
         this.mTargetCameraId = cameraId;
 
@@ -386,7 +367,7 @@ public class MediaStream {
                 if (mTargetCameraId == CAMERA_FACING_BACK_LOOP) {
                     if (mCameraId == Camera.CameraInfo.CAMERA_FACING_BACK) {
                         mCameraId = Camera.CameraInfo.CAMERA_FACING_FRONT;
-                    } else if (mCameraId == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                    } else {
                         mCameraId = Camera.CameraInfo.CAMERA_FACING_BACK;
                     }
                 } else {
@@ -413,53 +394,53 @@ public class MediaStream {
     private byte[] i420_buffer;
 
     // 摄像头预览的视频流数据
-    Camera.PreviewCallback previewCallback = new Camera.PreviewCallback() {
-        @Override
-        public void onPreviewFrame(byte[] data, Camera camera) {
-            if (data == null)
-                return;
+    Camera.PreviewCallback previewCallback = (data, camera) -> {
+        if (data == null)
+            return;
 
-//            int result;
-//            if (camInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-//                result = (camInfo.orientation + displayRotationDegree) % 360;
-//            } else {  // back-facing
-//                result = (camInfo.orientation - displayRotationDegree + 360) % 360;
-//            }
-//
-//            if (i420_buffer == null || i420_buffer.length != data.length) {
-//                i420_buffer = new byte[data.length];
-//            }
-//
-//            JNIUtil.ConvertToI420(data, i420_buffer, defaultWidth, defaultHeight, 0, 0, defaultWidth, defaultHeight, result % 360, 2);
-//            System.arraycopy(i420_buffer, 0, data, 0, data.length);
+//                int result;
+//                if (camInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+//                    result = (camInfo.orientation + displayRotationDegree) % 360;
+//                } else {  // back-facing
+//                    result = (camInfo.orientation - displayRotationDegree + 360) % 360;
+//                }
+//                if (i420_buffer == null || i420_buffer.length != data.length) {
+//                    i420_buffer = new byte[data.length];
+//                }
+//                JNIUtil.ConvertToI420(data, i420_buffer, defaultWidth, defaultHeight, 0, 0, defaultWidth, defaultHeight, result % 360, 2);
+//                System.arraycopy(i420_buffer, 0, data, 0, data.length);
 
-            Camera.CameraInfo camInfo = new Camera.CameraInfo();
-            Camera.getCameraInfo(mCameraId, camInfo);
-            int cameraRotationOffset = camInfo.orientation;
+        Camera.CameraInfo camInfo = new Camera.CameraInfo();
+        Camera.getCameraInfo(mCameraId, camInfo);
+        int cameraRotationOffset = camInfo.orientation;
 
-            if (cameraRotationOffset % 180 != 0) {
-                yuvRotate(data, 1, defaultWidth, defaultHeight, cameraRotationOffset);
-            }
-
-            if (previewFrameCallback != null) {
-                // 转换
-                JNIUtil.yuvConvert(data, defaultHeight, defaultWidth, 5);
-
-                // 压缩
-                int w = 480, h = 360;
-                byte[] i420_buffer2 = new byte[w * h * 3 / 2];
-                JNIUtil.I420Scale(data, i420_buffer2, defaultHeight, defaultWidth, w, h, 0);
-
-                ByteBuffer tmp = ByteBuffer.allocateDirect(w * h * 3 / 2);
-                tmp.clear();
-                tmp.put(i420_buffer2);
-
-                previewFrameCallback.onCameraI420Data(tmp, w, h);
-            }
-
-            mCamera.addCallbackBuffer(data);
+        if (cameraRotationOffset % 180 != 0) {
+            yuvRotate(data, 1, defaultWidth, defaultHeight, cameraRotationOffset);
         }
+
+        frameCallback(data);
+
+        mCamera.addCallbackBuffer(data);
     };
+
+    private void frameCallback(byte[] data) {
+        if (previewFrameCallback != null) {
+            // 转换
+            JNIUtil.yuvConvert(data, defaultHeight, defaultWidth, 5);
+
+            // 压缩
+            int w = 640, h = (int) ((1.0 * w * defaultHeight) / (1.0 * defaultWidth));
+            byte[] i420_buffer2 = new byte[w * h * 3 / 2];
+            JNIUtil.I420Scale(data, i420_buffer2, defaultHeight, defaultWidth, w, h, 0);
+
+            // 转换ByteBuffer
+            ByteBuffer tmp = ByteBuffer.allocateDirect(w * h * 3 / 2);
+            tmp.clear();
+            tmp.put(i420_buffer2);
+
+            previewFrameCallback.onCameraI420Data(tmp, w, h);
+        }
+    }
 
     /* ============================== CodecInfo ============================== */
 
@@ -567,12 +548,6 @@ public class MediaStream {
         displayRotationDegree = degree;
     }
 
-    private final PreviewFrameCallback previewFrameCallback;
-
-    public interface PreviewFrameCallback {
-        void onCameraI420Data(ByteBuffer buffer, int w, int h);
-    }
-
     /**
      * 旋转YUV格式数据
      *
@@ -595,5 +570,11 @@ public class MediaStream {
             offset += width * height;
             JNIUtil.rotateShortMatrix(src, offset, width / 2, height / 2, degree);
         }
+    }
+
+    private static PreviewFrameCallback previewFrameCallback;
+
+    public interface PreviewFrameCallback {
+        void onCameraI420Data(ByteBuffer buffer, int w, int h);
     }
 }

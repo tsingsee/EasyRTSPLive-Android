@@ -61,7 +61,7 @@ public class HWConsumer extends Thread implements VideoConsumer {
         this.bitrateKbps = bitrateKbps;
         this.mName = mName;
         this.mColorFormat = mColorFormat;
-        easyPlayerClient2 = client;
+        this.easyPlayerClient2 = client;
     }
 
     @Override
@@ -234,7 +234,7 @@ public class HWConsumer extends Thread implements VideoConsumer {
                         }
 
                         // 录像
-                        if (easyPlayerClient2.isRecording()) {
+                        if (easyPlayerClient2 != null && easyPlayerClient2.isRecording()) {
                             Client.FrameInfo frameInfo = new Client.FrameInfo();
                             frameInfo.type = sync ? 1 : 2;
                             frameInfo.stamp = bufferInfo.presentationTimeUs;
@@ -326,7 +326,9 @@ public class HWConsumer extends Thread implements VideoConsumer {
      * 停止编码并释放编码资源占用
      */
     private void stopMediaCodec() {
-        mMediaCodec.stop();
-        mMediaCodec.release();
+        if (mMediaCodec != null) {
+            mMediaCodec.stop();
+            mMediaCodec.release();
+        }
     }
 }

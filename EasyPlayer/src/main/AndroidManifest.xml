@@ -21,9 +21,10 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:largeHeap="true"
-        android:hardwareAccelerated="false"
         android:theme="@style/AppTheme"
         tools:replace="android:label">
+        <!--android:hardwareAccelerated="false"-->
+
         <activity android:name=".activity.YUVComposeActivity"></activity>
 
         <meta-data
@@ -61,6 +62,10 @@
             android:name=".activity.MediaFilesActivity"
             android:label="文件夹" />
         <activity android:name=".activity.AboutActivity" />
+
+        <service
+            android:name=".UVCCameraService"
+            android:enabled="true" />
     </application>
 
 </manifest>
