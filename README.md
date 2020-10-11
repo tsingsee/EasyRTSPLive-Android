@@ -16,7 +16,7 @@ EasyRTSPLive-Android是由[TSINGSEE青犀开放平台](http://open.tsingsee.com 
 
 ## 直接试用
 
-[http://d.alphaqr.com/EasyRTSPLive](http://d.alphaqr.com/EasyRTSPLive)
+[http://app.tsingsee.com/EasyRTSPLive](http://app.tsingsee.com/EasyRTSPLive)
 
 
 ![EasyRTSPLive-Android](http://www.easydarwin.org/github/images/app/2020/easy_rtsplive_android.png)
